@@ -1,0 +1,112 @@
+{
+  "output_directory": "transcripts",
+  "audio_processing": {
+    "enable": true,
+    "target_loudness_lufs": -6.0
+  },
+  "whisper": {
+    "model": "large-v3",
+    "device": "cuda",
+    "compression_ratio_threshold": 3.0,
+    "logprob_threshold": -1.5,
+    "no_speech_threshold": 0.2,
+    "beam_size": 5,
+    "best_of": 5,
+    "patience": 2.0,
+    "initial_prompt": "日本語の会話です。話された内容を1回ずつ正確に記録してください。同じ台詞を繰り返し書かないでください。吐息や声は「あ」「ん」「はぁ」のみで表記してください。",
+    "condition_on_previous_text": false
+  },
+  "segment_merging": {
+    "incomplete_markers": ["て", "で", "と", "が", "けど", "ども", "たり"],
+    "sentence_enders": ["。", "？", "！", "?", "!", "ね", "よ", "わ", "な", "か"],
+    "max_merge_gap": 0.5,
+    "merge_length_buffer": 15
+  },
+  "segment_splitting": {
+    "max_line_length": 30,
+    "primary_breaks": ["。", "？", "！", "?", "!"],
+    "secondary_breaks": ["、", "わ", "ね", "よ"],
+    "enable_llm": true,
+    "enable_revalidate": true,
+    "revalidation_confidence_threshold": 0.7
+  },
+  "text_polishing": {
+    "enable": true,
+    "batch_size": 10
+  },
+  "hallucination_filter": {
+    "phrase_filter": {
+      "enable": true,
+      "phrases": [
+        "…………",
+        "ご視聴ありがとうございました",
+        "ご視聴いただきありがとうございます",
+        "ご視聴いただきありがとうございました。"
+      ]
+    },
+    "consecutive_duplicates": {
+      "enable": true,
+      "min_occurrences": 4
+    },
+    "timing_validation": {
+      "enable": true,
+      "max_chars_per_second": 20,
+      "enable_revalidate_with_whisper": true
+    }
+  },
+  "timing_realignment": {
+    "enable": true,
+    "method": "time_based",
+    "min_gap": 0.1,
+    "batch_size": 10,
+    "enable_remove_irrelevant": false,
+    "irrelevant_threshold": 0.3,
+    "text_search": {
+      "expansion": 10.0,
+      "expansion_attempts": 4,
+      "similarity": 0.75,
+      "adjustment_threshold": 0.2
+    },
+    "time_based": {
+      "expansion": 10.0,
+      "expansion_attempts": 5,
+      "similarity": 0.75
+    }
+  },
+  "final_cleanup": {
+    "enable": true,
+    "stammer_filter": {
+      "enable": true,
+      "word_repetition": {
+        "max_pattern_length": 15,
+        "min_repetitions": 5,
+        "condensed_display_count": 3
+      },
+      "vocalization_replacement": {
+        "enable": false,
+        "vocalization_options": ["あ", "ん", "うん", "はぁ", "ふぅ"],
+        "short_duration_threshold": 2.0,
+        "medium_duration_threshold": 5.0,
+        "short_repeat_count": 1,
+        "medium_repeat_count": 2,
+        "long_repeat_count": 3
+      }
+    },
+    "global_word_filter": {
+      "enable": false,
+      "min_occurrences": 12
+    },
+    "cluster_filter": {
+      "enable": false,
+      "time_window_seconds": 60,
+      "min_occurrences": 6
+    }
+  },
+  "llm": {
+    "provider": "anthropic",
+    "anthropic_api_key": "<your-anthropic-api-key-here>",
+    "model": "claude-sonnet-4-5-20250929",
+    "max_tokens": 1024,
+    "temperature": 0.0
+  }
+}
