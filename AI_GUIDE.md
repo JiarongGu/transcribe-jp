@@ -305,140 +305,38 @@ git log --oneline -10
 
 ## Session History & Lessons Learned
 
-**Add new entries at the top when completing significant work.** This is the core value of this guide - knowledge continuity across AI sessions.
+**Session history has moved to [docs/SESSIONS.md](docs/SESSIONS.md)** where it benefits both humans and AI assistants.
 
-### Session 2025-01-11 (Part 3): Streamline AI_GUIDE.md
+**Why the move:**
+- Humans can understand the development process
+- AI assistants can learn from past patterns
+- Located in docs/ with other project documentation
+- More accessible to all team members
 
-**Git commits:**
-- `<pending>` - Streamline AI_GUIDE.md to remove redundancy with docs/
+**When to update docs/SESSIONS.md:**
+- After completing significant work
+- When fixing important bugs
+- When making key decisions
+- When learning valuable patterns
 
-**What was done:**
-1. Removed redundant sections (project overview, architecture, directory structure)
-2. These are now in docs/ (README, ARCHITECTURE, CHANGELOG)
-3. Focused AI_GUIDE on AI-specific guidance, lessons, and decision frameworks
-4. Reduced size: 674 lines → ~420 lines (38% reduction)
-
-**Key lessons:**
-- ✅ **Separate concerns:** Project docs (docs/) vs AI guidance (AI_GUIDE.md)
-- ✅ **Reference don't duplicate:** Link to docs/ instead of copying
-- ✅ **Focus on AI needs:** Guidelines, lessons, troubleshooting, session history
-
-**Files modified:**
-- `AI_GUIDE.md` - Restructured to remove redundancy
-
----
-
-### Session 2025-01-11 (Part 2): Stage 5 Re-filtering Fix
-
-**Git commits:**
-- `daa4fe7` - Add CHANGELOG.md and improve documentation guidelines
-- `ca26b37` - Fix Stage 5: Re-filter segments after timing_validation
-
-**What was done:**
-1. Fixed filter order bug: timing_validation could introduce hallucination phrases
-2. Added re-filtering step after timing_validation completes
-3. Created 4 new tests to verify hallucinations are caught
-4. Created docs/CHANGELOG.md for change history
-
-**The problem:**
-```
-OLD FLOW (BUGGY):
-1. phrase_filter removes "ご視聴ありがとうございました"
-2. timing_validation re-transcribes → might return hallucination!
-3. Bug: hallucination kept (phrase_filter already ran)
-```
-
-**The solution:**
-```
-NEW FLOW (FIXED):
-1. phrase_filter, consecutive_duplicates, merge_single_char
-2. timing_validation re-transcribes suspicious segments
-3. Re-run phrase_filter + consecutive_duplicates ✅
-```
-
-**Key lessons:**
-- 🐛 **Filter order matters:** Filters that modify text need re-filtering after them
-- ✅ **User identified bug:** User noticed phrase_filter should catch re-validated text
-- ✅ **Test the fix:** Created specific test cases (4 new tests, 257→261)
-- ✅ **CHANGELOG.md created:** User requested change history in docs/
-
-**Files modified:**
-- `modules/stage5_hallucination_filtering/processor.py` - Re-filtering logic
-- `tests/.../test_timing_validation_refilter.py` - 4 new tests
-- `docs/CHANGELOG.md` - Created
-- `AI_GUIDE.md` - Documentation guidelines
-
-**Test results:** 261/261 pass ✅
-
----
-
-### Session 2025-01-11 (Part 1): Stage 6 Improvements + AI_GUIDE Created
-
-**Git commits:**
-- `d1b5760` - Add AI_GUIDE.md - Living document for AI assistant continuity
-- `60d0256` - Remove redundant enable_remove_irrelevant feature
-- `c4eafd2` - Add full pipeline E2E test and cleanup test organization
-
-**What was done:**
-1. Improved Stage 6 timing realignment accuracy (+22% with difflib.SequenceMatcher)
-2. Optimized search algorithm (max 5 segments, early termination)
-3. Lowered thresholds from 0.95/1.0 to 0.75 (realistic for Japanese)
-4. Removed redundant `enable_remove_irrelevant` feature (69 lines deleted)
-5. Created E2E tests with real Japanese audio (counting 1-10)
-6. Created AI_GUIDE.md as living document
-
-**Key lessons:**
-- ❌ **Check redundancy:** `enable_remove_irrelevant` was 100% redundant with Stage 5's `timing_validation`
-- ✅ **Stage 5 handles filtering:** Don't add duplicate filtering in Stage 6
-- ✅ **Test with real audio:** Particle variations (は vs わ) need 0.75 threshold
-- ✅ **Commit frequently:** User asked "lets commit to git" - proactively suggest commits
-- ✅ **Living documentation:** User wanted guide updatable across sessions
-
-**Files modified:**
-- `modules/stage6_timing_realignment/utils.py` - difflib similarity
-- `modules/stage6_timing_realignment/processor.py` - removed 69 lines
-- `config.json` - thresholds updated to 0.75
-- `tests/e2e/` - comprehensive E2E suite
-- `AI_GUIDE.md` - created (v1.0)
-
-**Test results:** 257/257 pass ✅
-
----
-
-### Template for Next Session
-
-Copy this when you complete significant work:
-
-```markdown
-### Session YYYY-MM-DD: [Brief Description]
-
-**Git commits:**
-- `<hash>` - <commit message>
-
-**What was done:**
-1.
-2.
-
-**Key lessons learned:**
--
-
-**Files modified:**
--
-
-**Test results:** X/X tests pass ✅
-```
+**Template available in docs/SESSIONS.md** - Copy it when you complete work.
 
 ---
 
 ## How to Update This Guide
 
-1. **Read relevant section first** - Don't duplicate
-2. **Add specific examples** - Real code, file paths, commands
-3. **Reference git commits** - For traceability
-4. **Update Session History** - Document what you learned and why
-5. **Commit the changes** - Version control this guide
+**Update AI_GUIDE.md when:**
+- You discover new AI-specific patterns
+- You find common mistakes to avoid
+- You solve tricky issues (add to Troubleshooting)
+- You modify configuration behavior (update guidelines)
 
-**Good example:**
+**Update docs/SESSIONS.md when:**
+- You complete significant work
+- You want to document decisions/lessons
+- You fix bugs or make improvements
+
+**Good update example:**
 ```markdown
 ### ❌ DO NOT use LLM for text similarity
 - Learned in commit 60d0256
@@ -447,12 +345,14 @@ Copy this when you complete significant work:
 - See: modules/stage6_timing_realignment/utils.py::calculate_text_similarity()
 ```
 
-**Bad example:**
+**Bad update example:**
 ```markdown
 ### DO NOT break things
 - Don't make mistakes
 ```
 
+**Key principle:** Add specific, actionable guidance with real examples and file references.
+
 ---
 
-*This guide was created in session 2025-01-11. It is a living document maintained by AI assistants across sessions. Please keep it updated!*
+*This guide was created in session 2025-01-11. It is a living document maintained by AI assistants across sessions. Session history is now in [docs/SESSIONS.md](docs/SESSIONS.md).*
