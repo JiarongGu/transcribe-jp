@@ -63,7 +63,7 @@ transcribe-jp/
 │   ├── text_utils.py      # Japanese text utilities
 │   └── whisper_utils.py   # Whisper helper functions
 ├── tests/
-│   ├── unit/              # Unit tests (257 tests)
+│   ├── unit/              # Unit tests (261 tests)
 │   └── e2e/               # End-to-end tests (4 test suites)
 │       ├── test_media/    # Test audio files
 │       ├── test_timing_realignment.py
@@ -190,7 +190,7 @@ c4eafd2 Add full pipeline E2E test and cleanup test organization
    - Test with real Japanese audio before changing
 
 4. **Do NOT commit without running tests**
-   - All 257 unit tests must pass
+   - All 261 unit tests must pass
    - E2E tests should be verified for major changes
 
 5. **Do NOT add features that are already disabled**
@@ -217,7 +217,7 @@ c4eafd2 Add full pipeline E2E test and cleanup test organization
 ### Unit Tests (Required)
 
 **Location:** `tests/unit/`
-**Count:** 257 tests
+**Count:** 261 tests
 **Run command:**
 ```bash
 python -X utf8 -m pytest tests/unit/ -q --tb=line
@@ -531,7 +531,7 @@ This project prioritizes **accuracy over speed** for Japanese transcription. The
 
 **When in doubt, check existing code first.** This project has comprehensive utilities in `shared/` and stage-specific logic in `modules/`. Reuse existing functions rather than reimplementing.
 
-**Test everything.** 257 unit tests and 4 E2E suites exist for a reason. Use them.
+**Test everything.** 261 unit tests and 4 E2E suites exist for a reason. Use them.
 
 ---
 
@@ -539,9 +539,52 @@ This project prioritizes **accuracy over speed** for Japanese transcription. The
 
 This section tracks major changes and lessons learned across AI sessions. **Add new entries at the top** when you complete significant work.
 
-### Session 2025-01-11: Stage 6 Timing Realignment Improvements
+### Session 2025-01-11 (Part 2): Stage 5 Re-filtering Fix
 
 **Git commits:**
+- `<pending>` - Fix Stage 5 to re-filter after timing_validation
+
+**What was done:**
+1. Fixed filter order bug: timing_validation could introduce hallucination phrases
+2. Added re-filtering step after timing_validation completes
+3. Created 4 new tests to verify hallucinations are caught after re-transcription
+4. Updated AI_GUIDE.md with this lesson
+
+**The problem:**
+```
+OLD FLOW (BUGGY):
+1. phrase_filter removes "ご視聴ありがとうございました"
+2. consecutive_duplicates removes repetitions
+3. timing_validation re-transcribes → new text might be hallucination!
+4. Bug: hallucination phrase kept (phrase_filter already ran)
+```
+
+**The solution:**
+```
+NEW FLOW (FIXED):
+1. phrase_filter, consecutive_duplicates, merge_single_char
+2. timing_validation re-transcribes suspicious segments
+3. Re-run phrase_filter + consecutive_duplicates on re-validated segments ✅
+```
+
+**Key lessons learned:**
+- 🐛 **Filter order matters:** Filters that modify text need re-filtering after them
+- ✅ **Re-run filters on modified data:** When timing_validation re-transcribes, the new text needs filtering
+- ✅ **Test the fix:** Created specific test cases to verify hallucinations are caught
+- ✅ **User identified the bug:** User noticed phrase_filter should catch re-validated text
+
+**Files modified:**
+- `modules/stage5_hallucination_filtering/processor.py` - Added re-filtering after timing_validation
+- `tests/unit/modules/stage5_hallucination_filtering/test_timing_validation_refilter.py` - 4 new tests
+
+**Test results:** 261/261 unit tests pass ✅ (+4 new tests)
+
+---
+
+### Session 2025-01-11 (Part 1): Stage 6 Timing Realignment Improvements
+
+**Git commits:**
+- `d1b5760` - Add AI_GUIDE.md - Living document for AI assistant continuity
 - `60d0256` - Remove redundant enable_remove_irrelevant feature
 - `c4eafd2` - Add full pipeline E2E test and cleanup test organization
 
@@ -551,6 +594,7 @@ This section tracks major changes and lessons learned across AI sessions. **Add 
 3. Lowered thresholds from 0.95 to 0.75 (realistic for Japanese)
 4. Removed redundant `enable_remove_irrelevant` feature
 5. Created E2E tests with real Japanese audio (counting 1-10)
+6. Created AI_GUIDE.md as living document for future sessions
 
 **Key lessons learned:**
 - ❌ **Always check for redundancy:** `enable_remove_irrelevant` was 100% redundant with Stage 5's `timing_validation`
@@ -564,6 +608,7 @@ This section tracks major changes and lessons learned across AI sessions. **Add 
 - `modules/stage6_timing_realignment/processor.py` - removed 69 lines
 - `config.json` - thresholds updated to 0.75
 - `tests/e2e/` - comprehensive E2E test suite
+- `AI_GUIDE.md` - created living document
 
 **Test results:** 257/257 unit tests pass ✅
 

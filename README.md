@@ -511,7 +511,7 @@ pytest tests/e2e/ -v
 ```
 
 **Test Coverage:**
-- ✅ 257 unit tests passing
+- ✅ 261 unit tests passing
 - ✅ E2E pipeline tests
 - ✅ All 9 stages covered
 - ✅ Hallucination filtering
@@ -556,7 +556,7 @@ MIT License - See LICENSE file for details
   - **REORDERED**: Timing Realignment (Stage 6) now runs before Text Polishing (Stage 7)
   - Removed redundant `.enable` flags from method configs
   - Updated all documentation to reflect 9-stage architecture
-  - 257 unit tests passing
+  - 261 unit tests passing
 
 - **v3.0.0** (2025-01): Fully modular 9-stage architecture
   - All stages now in dedicated modules

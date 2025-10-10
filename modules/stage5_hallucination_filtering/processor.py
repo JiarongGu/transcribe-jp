@@ -51,7 +51,21 @@ def filter_hallucinations(segments, config, model=None, media_path=None):
     timing_config = hallucination_config.get("timing_validation", {})
     if timing_config.get("enable", False):
         print("    - Validating timing")
+        segments_before_validation = len(segments)
         segments = validate_segment_timing(segments, config, model, media_path)
+
+        # If timing validation re-transcribed segments, re-run filters on the new text
+        # This prevents re-validated segments from containing hallucination phrases
+        if len(segments) != segments_before_validation or timing_config.get("enable_revalidate_with_whisper", False):
+            print("    - Re-filtering after timing validation")
+
+            # Re-run phrase filter
+            if phrase_config.get("enable", False):
+                segments = remove_hallucination_phrases(segments, config)
+
+            # Re-run consecutive duplicates filter
+            if consecutive_config.get("enable", False):
+                segments = remove_consecutive_duplicates(segments, config)
 
     print(f"  - {len(segments)} segments after filtering")
 
