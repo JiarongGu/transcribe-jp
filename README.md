@@ -283,8 +283,6 @@ Two methods available:
     "method": "time_based",
     "min_gap": 0.1,
     "batch_size": 10,
-    "enable_remove_irrelevant": false,
-    "irrelevant_threshold": 0.3,
     "text_search": {
       "search_padding": 3.0,
       "adjustment_threshold": 0.3

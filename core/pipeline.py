@@ -90,16 +90,7 @@ def run_pipeline(media_path, model, output_dir, config):
         timing_config = config.get("timing_realignment", {})
         if timing_config.get("enable", False):
             print("\n[Stage 6/9] Timing Realignment")
-            from modules.stage6_timing_realignment.processor import realign_timing, remove_irrelevant_segments
-
-            # Optionally remove irrelevant segments first
-            if timing_config.get("enable_remove_irrelevant", False):
-                all_sub_segments = remove_irrelevant_segments(
-                    all_sub_segments,
-                    model,
-                    processed_path,
-                    config
-                )
+            from modules.stage6_timing_realignment.processor import realign_timing
 
             # Realign timing
             all_sub_segments = realign_timing(

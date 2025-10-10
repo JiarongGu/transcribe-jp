@@ -336,9 +336,7 @@ Final timing QA using Whisper to verify text matches audio.
     "search_padding": 3.0,
     "adjustment_threshold": 0.3,
     "min_gap": 0.1,
-    "batch_size": 10,
-    "enable_remove_irrelevant": false,
-    "irrelevant_threshold": 0.3
+    "batch_size": 10
   }
 }
 ```
@@ -350,8 +348,6 @@ Final timing QA using Whisper to verify text matches audio.
 | `adjustment_threshold` | float | `0.3` | Min time difference to adjust |
 | `min_gap` | float | `0.1` | Minimum gap between segments |
 | `batch_size` | integer | `10` | Segments to process in parallel |
-| `enable_remove_irrelevant` | boolean | `false` | Remove segments not matching audio |
-| `irrelevant_threshold` | float | `0.3` | Confidence threshold for removal |
 
 **What it does:**
 - Re-transcribes each segment's audio region
@@ -486,8 +482,7 @@ For best quality transcription with all enhancements:
     "batch_size": 10
   },
   "timing_realignment": {
-    "enable": true,
-    "enable_remove_irrelevant": false
+    "enable": true
   },
   "llm": {
     "provider": "anthropic",

@@ -36,7 +36,6 @@ def get_display_stages(config):
         ("     > Revalidate with Whisper", hallucination_config.get("timing_validation", {}).get("enable_revalidate_with_whisper", False)),
         ("6. Text Polishing", polishing_config.get("enable", False)),
         ("7. Timing Realignment", timing_config.get("enable", False)),
-        ("   - Remove Irrelevant Text", timing_config.get("enable_remove_irrelevant", False)),
         ("8. Final Cleanup", True),  # Always enabled
         ("   - Stammer Filter", stammer_config.get("enable", True)),
         ("     > Vocalization Replacement", stammer_config.get("vocalization_replacement", {}).get("enable", False)),
