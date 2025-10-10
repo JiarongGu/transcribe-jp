@@ -147,11 +147,13 @@ c4eafd2 Add full pipeline E2E test and cleanup test organization
    - Respect sentence enders: 。？！ね よ わ な か
    - Use proper incomplete markers: て で と が けど
 
-6. **Update documentation**
-   - README.md for user-facing changes
-   - CONFIGURATION.md for config changes
-   - PIPELINE_STAGES.md for stage behavior changes
-   - IMPROVEMENTS.md for significant enhancements
+6. **Update documentation (REQUIRED for all changes)**
+   - **docs/CHANGELOG.md** - Add entry for ALL significant changes (new features, bug fixes, removals)
+   - **AI_GUIDE.md** - Update Session History when completing significant work
+   - **README.md** - Update for user-facing changes (features, installation, usage)
+   - **docs/CONFIGURATION.md** - Update for config option changes
+   - **docs/PIPELINE_STAGES.md** - Update for stage behavior changes
+   - **Note:** CHANGELOG.md and AI_GUIDE.md should be updated together - CHANGELOG for what changed, AI_GUIDE for why and lessons learned
 
 7. **Use proper git commit messages**
    - Clear summary line
@@ -503,11 +505,11 @@ git log --oneline -10
 
 ### Internal Documentation
 - `README.md` - User guide and quick start
+- `AI_GUIDE.md` - This guide (for AI assistants)
+- `docs/CHANGELOG.md` - Complete change history with git commits
 - `docs/ARCHITECTURE.md` - System design overview
 - `docs/CONFIGURATION.md` - Complete config reference
 - `docs/PIPELINE_STAGES.md` - Detailed stage documentation
-- `docs/IMPROVEMENTS.md` - Recent improvements log
-- `docs/TESTING.md` - Test suite documentation
 
 ### External Resources
 - [Whisper GitHub](https://github.com/openai/whisper)
@@ -572,10 +574,13 @@ NEW FLOW (FIXED):
 - ✅ **Re-run filters on modified data:** When timing_validation re-transcribes, the new text needs filtering
 - ✅ **Test the fix:** Created specific test cases to verify hallucinations are caught
 - ✅ **User identified the bug:** User noticed phrase_filter should catch re-validated text
+- ✅ **Update CHANGELOG.md:** User requested CHANGELOG.md in docs/ for change history (separate from AI_GUIDE session history)
 
 **Files modified:**
 - `modules/stage5_hallucination_filtering/processor.py` - Added re-filtering after timing_validation
 - `tests/unit/modules/stage5_hallucination_filtering/test_timing_validation_refilter.py` - 4 new tests
+- `docs/CHANGELOG.md` - Created comprehensive change history
+- `AI_GUIDE.md` - Updated documentation guidelines to require CHANGELOG updates
 
 **Test results:** 261/261 unit tests pass ✅ (+4 new tests)
 
