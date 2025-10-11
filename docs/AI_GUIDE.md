@@ -1,333 +1,151 @@
 # AI Assistant Guide for transcribe-jp
 
-> **📝 LIVING DOCUMENT:** This guide is maintained by AI assistants across sessions. If you discover new patterns, conventions, or lessons learned while working on this project, **UPDATE THIS DOCUMENT** and commit your changes. Future AI sessions depend on this knowledge.
+> **LIVING DOCUMENT:** This guide is maintained by AI assistants across sessions. If you discover new patterns, conventions, or lessons learned while working on this project, **UPDATE THE DETAILED GUIDES** and commit your changes. Future AI sessions depend on this knowledge.
 
-This document provides AI-specific context for working on transcribe-jp. It focuses on guidelines, lessons learned, and decision-making frameworks that aren't covered in the regular project documentation.
-
-**Version:** 2.0
-**Last Updated:** 2025-01-11
-**Changes from v1.0:** Removed redundancy with docs/, focused on AI-specific guidance
+**Version:** 3.0
+**Last Updated:** 2025-10-12
+**Changes from v2.0:** Split into focused guides (GUIDELINES, WORKFLOWS, TROUBLESHOOTING, REFERENCE)
 
 ---
 
-## Quick Start for AI Assistants
+## Purpose
 
-**Read these first:**
-1. [README.md](../README.md) - Project overview, installation, usage
-2. [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - **START HERE!** Knowledge database of mistakes to avoid
-3. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
-4. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
-5. **This guide** - AI-specific guidelines and workflows
+This guide provides AI-specific context for working on transcribe-jp. It focuses on guidelines, lessons learned, and decision-making frameworks that aren't covered in the regular project documentation.
 
-**Key Knowledge Base Documents (docs/ folder):**
-- [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - Mistakes, gotchas, and design decisions
-- [features/LLM_PROVIDERS.md](features/LLM_PROVIDERS.md) - Comprehensive LLM provider configuration guide
-- [core/CONFIGURATION.md](core/CONFIGURATION.md) - Full configuration reference
-- [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Detailed stage documentation
-
-**Key facts:**
-- 9-stage Japanese transcription pipeline (Whisper → processing → VTT output)
-- 270 unit tests + 4 E2E tests (all must pass before committing)
-- Japanese-specific: particle variations, no spaces, sentence structure
-- Stage order is critical: filtering before realignment, polishing after
-- Test command: `python -X utf8 -m pytest tests/unit/ -q --tb=line`
+**For detailed information, see the specialized guides below.**
 
 ---
 
-## Critical Guidelines for AI Assistants
+## 5 Critical Rules (Non-Negotiable)
 
-### ✅ DO (Non-Negotiable)
-
-1. **ALWAYS run tests before committing**
+1. **ALWAYS run tests before committing** - All 275 tests must pass
    ```bash
    python -X utf8 -m pytest tests/unit/ -q --tb=line
    ```
-   All 261 tests must pass. No exceptions.
 
 2. **ALWAYS update CHANGELOG.md BEFORE committing**
-   - User explicitly requested this for ALL commits
    - Add entry with Date + Time format: [2025-10-12 05:30]
-   - Include: What changed, impact, files modified, test results
-   - Update Version History Summary table at bottom
-   - See "Git Commit Workflow" section below for full process
+   - Include: what changed, impact, files modified, test results
 
 3. **ALWAYS suggest git commit after completing tasks**
    - Ask: "Should I commit these changes to git?"
-   - User explicitly requested this behavior
-   - Create descriptive commits with test results
-   - Use co-authorship footer (see git commit template below)
+   - Use co-authorship footer (see [WORKFLOWS.md](maintenance/ai/WORKFLOWS.md))
 
-4. **Update documentation for ALL significant changes**
-   - **CHANGELOG.md** - What changed, when, impact (REQUIRED - see #2)
-   - **SESSIONS.md** - Why, lessons learned, context
-   - **../README.md** - User-facing features/changes
-   - **core/CONFIGURATION.md** - Config option changes
-   - **core/PIPELINE_STAGES.md** - Stage behavior changes
+4. **Check for redundancy before adding features**
+   - Stage 5 = hallucinations, Stage 6 = timing, Stage 8 = cleanup
+   - Search first: `grep -r "feature_name"`
 
-5. **Update THIS document (AI_GUIDE.md) when you learn something**
-   - Add new patterns to guidelines
-   - Document mistakes in "DO NOT" section
-   - Add troubleshooting for tricky issues
-   - Update Session History (see template below)
-
-6. **Check for redundancy before adding features**
-   - **Stage 5** = Hallucination filtering (phrase_filter, timing_validation)
-   - **Stage 6** = Timing realignment (re-transcription)
-   - **Stage 8** = Final cleanup (stammers, duplicates)
-   - Search codebase first: `grep -r "feature_name"`
-
-7. **Follow Japanese text conventions**
-   - No spaces between segments
-   - Particle variations: は/わ, を/お, へ/え (use 0.75 similarity threshold)
-   - Sentence enders: 。？！ね よ わ な か
-   - Incomplete markers: て で と が けど
-
-8. **Use centralized utilities (don't reimplement)**
-   - `shared/text_utils.py` - Text normalization, Japanese utils
-   - `shared/whisper_utils.py` - Audio loading, transcription
-   - `modules/stage6_timing_realignment/utils.py` - Re-transcription, similarity
-
-### ❌ DO NOT (Common Mistakes)
-
-1. **Do NOT skip test runs** - 261 tests must pass before commit
-
-2. **Do NOT change pipeline stage order** without deep analysis
-   - Hallucination filtering BEFORE timing realignment (Stage 5 → 6)
-   - Text polishing AFTER timing realignment (Stage 6 → 7)
-   - Re-filtering AFTER timing_validation (learned in session 2025-01-11)
-
-3. **Do NOT add features that duplicate existing functionality**
-   - Example: `enable_remove_irrelevant` was redundant with Stage 5's `timing_validation` (removed in commit 60d0256)
-   - Always grep for similar code first
-
-4. **Do NOT lower thresholds without testing**
-   - Similarity: 0.75 (tuned for Japanese particle variations)
-   - Don't go below 0.7 without extensive testing
-   - Test with: これは vs これわ = 0.667 similarity
-
-5. **Do NOT use LLM for non-semantic tasks**
-   - Text similarity → use `difflib.SequenceMatcher` (NOT LLM)
-   - Timing validation → use Whisper re-transcription (NOT LLM)
-   - Use LLM only for: semantic splitting (Stage 4), text polishing (Stage 7)
-
-6. **Do NOT commit without updating CHANGELOG.md**
-   - User explicitly requested this
-   - CHANGELOG = what/when/impact (use Date + Time format: [2025-01-11 14:30])
-   - AI_GUIDE = why/lessons/context
-   - Never use git hash in CHANGELOG headers - use Date + Time instead
+5. **Follow Japanese text conventions**
+   - No spaces, particle variations (は/わ, を/お), 0.75 similarity threshold
 
 ---
 
-## Testing Requirements
+## Quick Start Sequence
 
-**Unit tests:** `tests/unit/` (261 tests)
-- Run: `python -X utf8 -m pytest tests/unit/ -q --tb=line`
-- All must pass before committing
-- Add tests for new features
-- Windows: use `-X utf8` flag for Japanese text
+**First time working on this project? Read in this order:**
 
-**E2E tests:** `tests/e2e/` (4 suites)
-- Run: `python -X utf8 -m pytest tests/e2e/ -v`
-- Required for pipeline changes
-- Test audio: `tests/e2e/test_media/japanese_test.mp3` (Japanese counting 1-10, 27s, 167KB)
+1. [README.md](../README.md) - Project overview, installation, basic usage
+2. [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - **START HERE!** Mistakes to avoid
+3. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
+4. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
+5. **[maintenance/ai/GUIDELINES.md](maintenance/ai/GUIDELINES.md)** - Critical DO's and DON'Ts (detailed)
 
 ---
 
-## Key Configuration Settings
+## Detailed AI Guides
 
-See [core/CONFIGURATION.md](core/CONFIGURATION.md) for full reference. AI assistants should know these:
+### [GUIDELINES.md](maintenance/ai/GUIDELINES.md)
+**Critical DO's and DON'Ts for AI assistants**
 
-**Similarity thresholds (0.75):**
-- `timing_realignment.text_search.similarity: 0.75`
-- `timing_realignment.time_based.similarity: 0.75`
-- Tested with Japanese particles (これは vs これわ = 0.667)
-- DO NOT lower below 0.7
+- Complete list of DO's (8 rules) and DON'Ts (6 common mistakes)
+- Japanese language guidelines (particles, sentence structure, normalization)
+- Performance considerations (Whisper, LLM, optimization tips)
+- Testing requirements (unit + E2E)
 
-**Timing validation (Stage 5):**
-- `hallucination_filter.timing_validation.enable: true`
-- `hallucination_filter.timing_validation.enable_revalidate_with_whisper: true`
-- Re-transcribes segments > 20 chars/sec (physically impossible)
-- After re-transcription, re-runs phrase_filter + consecutive_duplicates (fixed 2025-01-11)
-
-**Whisper settings:**
-- `model: "large-v3"` - Best for Japanese
-- `condition_on_previous_text: false` - Prevents error propagation
-- `initial_prompt: "日本語の会話です..."` - Reduces hallucinations
+**Read this when:** Starting work, unsure about best practices, adding features
 
 ---
 
-## Common Tasks
+### [WORKFLOWS.md](maintenance/ai/WORKFLOWS.md)
+**Step-by-step workflows for common tasks**
 
-### Adding a New Filter
+- Adding new filters
+- Modifying text similarity thresholds
+- Git commit workflow (with template)
+- Adding new knowledge base documents
+- Updating documentation (CHANGELOG, SESSIONS, LESSONS_LEARNED)
 
-1. Determine stage: 5=hallucinations, 8=cleanup
-2. Add logic: `modules/stageN_*/filters.py`
-3. Import in: `modules/stageN_*/processor.py`
-4. Add config: `config.json`
-5. Write tests: `tests/unit/modules/stageN_*/`
-6. Update docs: `core/CONFIGURATION.md`, `CHANGELOG.md`
-7. Run tests: All 261 must pass
+**Read this when:** Performing routine tasks, making commits, updating docs
 
-### Modifying Text Similarity
+---
 
-**Current:** `modules/stage6_timing_realignment/utils.py::calculate_text_similarity()`
-- Uses `difflib.SequenceMatcher` (Ratcliff/Obershelp algorithm)
-- Strips punctuation: `[、。！？\s]`
-- Returns 0.0-1.0 ratio
+### [TROUBLESHOOTING.md](maintenance/ai/TROUBLESHOOTING.md)
+**Solutions to common problems and debugging strategies**
 
-**If modifying:**
-1. Test with Japanese particle variations (は/わ, を/お)
-2. Test with punctuation differences
-3. Update tests: `tests/e2e/test_timing_realignment.py`
-4. Document threshold changes in CHANGELOG.md
+- Unicode errors, import errors, timing overlaps
+- Tests pass but pipeline fails
+- Performance issues
+- Questions to ask before making changes
+- Debugging strategies (logging, specific tests, git history)
 
-### Git Commit Workflow
+**Read this when:** Stuck on a problem, tests failing, unexpected behavior
 
-**IMPORTANT:** Follow this workflow for ALL commits:
+---
 
-1. **Complete the work** (code + tests)
-2. **Run all tests** (`python -m pytest tests/ -v -q --tb=line`)
-3. **Update CHANGELOG.md** (add entry with Date + Time format)
-4. **Stage all changes** (`git add -A`)
-5. **Commit with descriptive message** (use template below)
+### [REFERENCE.md](maintenance/ai/REFERENCE.md)
+**Quick reference for commands, settings, and file locations**
 
-**Git Commit Template:**
+- Essential commands (tests, git, pipeline)
+- Key configuration settings (similarity, Whisper, timing validation)
+- File locations (core, stages, utilities, tests, docs)
+- Pipeline stage order
+- Japanese language quick reference
+- Documentation map
 
-```bash
-git commit -m "Brief summary line
+**Read this when:** Need quick lookup, forgot a command, finding a file
 
-Detailed explanation of:
-- What changed
-- Why it changed
-- Impact on users/developers
+---
 
-Files changed:
-- file1.py - description
-- file2.py - description
+## Key Facts
 
-Test results: 275/275 tests pass ✅
+- **9-stage Japanese transcription pipeline** - Whisper → processing → VTT output
+- **275 tests** - 270 unit + 4 E2E + 1 smoke test (all must pass before committing)
+- **Japanese-specific** - Particle variations, no spaces, sentence structure
+- **Stage order is critical** - Filtering before realignment, polishing after
+- **Test command:** `python -X utf8 -m pytest tests/unit/ -q --tb=line`
+- **Config:** `config.json` + `config.local.json` (deep merge, local not tracked)
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+---
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
+## Documentation Map
+
+```
+AI ASSISTANT GUIDES
+├── AI_GUIDE.md (this file)                  # Overview + navigation
+└── maintenance/ai/
+    ├── GUIDELINES.md                        # Critical DO's and DON'Ts
+    ├── WORKFLOWS.md                         # Step-by-step workflows
+    ├── TROUBLESHOOTING.md                   # Problem solving
+    └── REFERENCE.md                         # Quick reference
+
+KNOWLEDGE BASE (read these!)
+├── maintenance/LESSONS_LEARNED.md           # Mistakes, patterns, decisions
+├── features/LLM_PROVIDERS.md                # LLM provider configuration
+├── SESSIONS.md                              # Development history
+└── CHANGELOG.md                             # Recent changes
+
+CORE SYSTEM DOCS
+├── README.md                                # User guide
+├── core/ARCHITECTURE.md                     # System design
+├── core/CONFIGURATION.md                    # Config reference
+└── core/PIPELINE_STAGES.md                  # Stage details
 ```
 
-**Common Mistake:** Forgetting to update CHANGELOG.md before committing. The user specifically requested CHANGELOG updates for ALL commits.
-
----
-
-## Performance Considerations
-
-**Most expensive operations:**
-1. **Whisper** (Stage 2, 6) - ~10-20min per hour of audio (GPU)
-2. **LLM** (Stage 4, 7) - Optional splitting/polishing, use batching
-3. **Stage 6 Timing Realignment** - Re-transcribes every segment
-
-**Optimization tips:**
-- Use `batch_size` config for parallel processing
-- Limit search windows (Stage 6: max 5 segments)
-- Use early termination (similarity >= 0.9 → stop searching)
-- Cache transcription results when possible
-
----
-
-## Japanese Language Specifics
-
-**Particle variations** (Whisper transcribes differently):
-- は (particle) vs わ (wa sound)
-- を (particle) vs お (o sound)
-- へ (particle) vs え (e sound)
-
-→ Solution: 0.75 similarity threshold handles these
-
-**Sentence structure:**
-- Enders: 。？！ね よ わ な か
-- Incomplete: て で と が けど ども たり
-- Stage 3 merges incomplete, Stage 4 splits at enders
-
-**Text normalization:** `shared/text_utils.py`
-- Full-width → half-width
-- No spaces between words
-- Katakana variants (ヴ → ブ)
-
----
-
-## Troubleshooting
-
-**Tests fail with Unicode errors:**
-- Solution: Use `python -X utf8` flag
-- Windows uses CP1252 by default
-
-**Import errors:**
-- Check Python path includes project root
-- Verify `__init__.py` exports
-
-**Timing overlaps after Stage 6:**
-- Stage 6 should eliminate overlaps
-- Check `min_gap: 0.1` in config.json
-
-**Similarity threshold too strict:**
-- 0.75 is tuned for Japanese
-- Don't raise above 0.8 (breaks particle variation handling)
-
----
-
-## Questions to Ask Before Making Changes
-
-1. **Does this already exist in another stage?**
-   - Stage 5 = filtering, Stage 6 = timing, Stage 8 = cleanup
-
-2. **Will this break tests?**
-   - Run unit tests after changes
-   - Run E2E for pipeline modifications
-
-3. **Is this Japanese-specific?**
-   - Use `shared/text_utils.py`
-   - Consider particle variations
-
-4. **Does this need configuration?**
-   - Add to `config.json` with sensible defaults
-   - Document in `core/CONFIGURATION.md`
-
-5. **Is there test coverage?**
-   - Add unit tests for new functions
-   - Add E2E for pipeline changes
-
-6. **Did I update documentation?**
-   - CHANGELOG.md (REQUIRED for all changes)
-   - AI_GUIDE.md Session History
-   - Other docs as needed
-
----
-
-## Quick Reference
-
-**Run tests:**
-```bash
-python -X utf8 -m pytest tests/unit/ -q --tb=line
-python -X utf8 -m pytest tests/e2e/ -v
-```
-
-**Check git:**
-```bash
-git status
-git diff --stat
-git log --oneline -10
-```
-
-**Key files:**
-- Pipeline: `core/pipeline.py::run_pipeline()`
-- Config: `config.json`
-- Text similarity: `modules/stage6_timing_realignment/utils.py::calculate_text_similarity()`
-- Japanese utils: `shared/text_utils.py`
-
-**Documentation:**
-- [README.md](../README.md) - User guide
-- [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - Knowledge database
-- [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - System design
-- [core/CONFIGURATION.md](core/CONFIGURATION.md) - Config reference
-- [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Stage details
-- [CHANGELOG.md](CHANGELOG.md) - Change history
+**Navigation tips:**
+- **Starting out?** → LESSONS_LEARNED.md + GUIDELINES.md
+- **Doing a task?** → WORKFLOWS.md
+- **Something broken?** → TROUBLESHOOTING.md
+- **Need quick info?** → REFERENCE.md
 
 ---
 
@@ -335,222 +153,53 @@ git log --oneline -10
 
 ### LESSONS_LEARNED.md - Your First Stop
 
-**[LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md)** is a curated knowledge database of:
-- **Mistakes to avoid** - Learn from past errors
-- **Design decisions** - Understand why things are the way they are
-- **Gotchas and patterns** - Non-obvious issues and solutions
-- **Best practices** - Proven patterns for common tasks
+**[maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md)** is a curated knowledge database of:
+- Mistakes to avoid
+- Design decisions and reasoning
+- Gotchas and non-obvious issues
+- Best practices for common tasks
 
-**Always read LESSONS_LEARNED.md** before making architectural changes. It contains context that isn't obvious from code.
+**Always read LESSONS_LEARNED.md before making architectural changes.** It contains context that isn't obvious from code.
 
-### Documentation Scaling Strategy ⚠️
-
-**IMPORTANT:** As documentation grows, we risk exceeding token limits in future sessions.
-
-**Current status (2025-10-12):** ~163 KB (~42K tokens, 21% of 200K context)
-
-**See:** [DOCUMENTATION_SCALING_STRATEGY.md](maintenance/DOCUMENTATION_SCALING_STRATEGY.md) for complete strategy.
-
-**Key actions for AI assistants:**
-1. **When CHANGELOG.md > 50KB:** Archive previous month to `maintenance/CHANGELOG_ARCHIVE_YYYY-MM.md`
-2. **When LESSONS_LEARNED.md > 30KB:** Split by topic into `maintenance/lessons/` folder
-3. **Load docs strategically:** Don't read everything upfront - load task-specific docs only
-4. **Monitor monthly:** Run size check script to track growth
-
-**When to add to LESSONS_LEARNED.md:**
-1. You made a mistake worth documenting
-2. You discovered a non-obvious issue
-3. You made a design decision with reasoning
-4. You solved a tricky problem
-5. You refactored and want to explain why
-
-**Format:** See [LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md#how-to-update-this-document) for template.
-
-### SESSIONS.md - Development History
-
-**[SESSIONS.md](SESSIONS.md)** tracks session-by-session development:
-- What was accomplished
-- Why decisions were made
-- Lessons learned
-- Context for future work
-
-**When to update SESSIONS.md:**
-- After completing significant work
-- When fixing important bugs
-- When making key decisions
-- When learning valuable patterns
-
-**Template available in SESSIONS.md** - Copy it when you complete work.
+---
 
 ### Relationship Between Docs
 
 ```
 LESSONS_LEARNED.md → Curated knowledge (mistakes, patterns, decisions)
 SESSIONS.md        → Chronological history (what happened, when, why)
-AI_GUIDE.md        → Quick reference (guidelines, workflows, tips)
+AI_GUIDE.md        → Navigation hub (links to detailed guides)
+GUIDELINES.md      → Critical rules (DO's and DON'Ts)
+WORKFLOWS.md       → How-to guides (step-by-step procedures)
+TROUBLESHOOTING.md → Problem solving (common issues, debugging)
+REFERENCE.md       → Quick lookup (commands, settings, locations)
 CHANGELOG.md       → User-facing changes (what changed, impact)
 ```
-
-**Use LESSONS_LEARNED.md** to prevent mistakes.
-**Use SESSIONS.md** to understand project evolution.
-**Use AI_GUIDE.md** for day-to-day development.
-**Use CHANGELOG.md** to see what changed recently.
-
----
-
-## Adding New Knowledge Base Documents
-
-**When to create new knowledge documents in `docs/`:**
-
-### ✅ Create New Document When:
-1. **Topic is self-contained** - Can be understood independently
-2. **Topic is substantial** - More than 100 lines of content
-3. **Topic benefits multiple stakeholders** - Useful for users, developers, and AI assistants
-4. **Topic needs detailed examples** - Step-by-step guides, troubleshooting, FAQs
-5. **Topic is frequently referenced** - Will be linked from multiple places
-
-**Examples:**
-- `features/LLM_PROVIDERS.md` - Self-contained LLM configuration guide (users need it, AI assistants reference it)
-- `maintenance/LESSONS_LEARNED.md` - Knowledge database of mistakes and design decisions
-- `SESSIONS.md` - Development history and lessons learned (in docs root)
-- `core/ARCHITECTURE.md` - System design and pipeline overview
-
-### ❌ Don't Create New Document When:
-1. **Topic fits existing document** - Add to CONFIGURATION.md, AI_GUIDE.md, etc.
-2. **Topic is too small** - Less than 50 lines (add to existing doc)
-3. **Topic is code-specific** - Add comments in code or docstrings
-4. **Topic is temporary** - Add to CHANGELOG.md instead
-
-### Organize Docs into Proper Folders
-
-**Important:** Don't put all docs in `docs/` root. Use folders:
-- `docs/core/` - Core system docs (ARCHITECTURE, CONFIGURATION, PIPELINE_STAGES)
-- `docs/features/` - Feature-specific docs (LLM_PROVIDERS, stage guides)
-- `docs/maintenance/` - Maintenance docs (AI_GUIDE, LESSONS_LEARNED, historical records)
-
-### Document Structure Template
-
-```markdown
-# Document Title
-
-**Quick Reference:** One-line summary of what this document covers
-
-**Last Updated:** YYYY-MM-DD
-**Related:** Links to related documents
-
----
-
-## Overview
-
-Brief introduction (2-3 paragraphs)
-
----
-
-## Quick Start
-
-Most common use case with minimal steps
-
----
-
-## Detailed Sections
-
-In-depth coverage with examples
-
----
-
-## Troubleshooting
-
-Common issues and solutions
-
----
-
-## FAQ
-
-Frequently asked questions
-
----
-
-## See Also
-
-- Links to related documents
-- External resources
-```
-
-### How to Make Documents AI-Discoverable
-
-**1. Add to AI_GUIDE.md Quick Start:**
-```markdown
-**Key Knowledge Base Documents (docs/ folder):**
-- [YOUR_DOC.md](YOUR_DOC.md) - Brief description
-```
-
-**2. Add cross-references:**
-- Link from related documents (CONFIGURATION.md, README.md, etc.)
-- Use consistent naming: `[Document Name](path/to/doc.md)`
-
-**3. Use clear headers:**
-- AI assistants scan headers to understand content
-- Use action-oriented titles: "How to Configure", "Troubleshooting Guide"
-- Include keywords: "LLM", "Configuration", "Pipeline", "Testing"
-
-**4. Add metadata at top:**
-```markdown
-**Last Updated:** YYYY-MM-DD
-**Related:** [Related Doc 1](path), [Related Doc 2](path)
-```
-
-**5. Include Quick Reference:**
-- One-line summary at the top
-- AI assistants read this first to decide if document is relevant
-
-### Knowledge Base Best Practices
-
-1. **One topic per document** - Don't mix unrelated topics
-2. **Start with examples** - Show, don't just tell
-3. **Use tables for comparisons** - Easy to scan
-4. **Include troubleshooting** - Common issues save time
-5. **Link bidirectionally** - If A links to B, B should link back to A
-6. **Update "Last Updated"** - Helps AI assistants assess freshness
-7. **Keep it concise** - Break long docs into sub-documents
 
 ---
 
 ## How to Update This Guide
 
 **Update AI_GUIDE.md when:**
-- You discover new AI-specific patterns or workflows
-- You need to add critical guidelines
-- **You create new knowledge base documents** (add to Quick Start list)
+- Restructuring documentation
+- Adding new specialized guides
+- Changing navigation structure
+
+**Update the detailed guides when:**
+- **GUIDELINES.md** - New AI-specific patterns, critical rules, language guidelines
+- **WORKFLOWS.md** - New common tasks, workflow improvements, documentation procedures
+- **TROUBLESHOOTING.md** - New problems/solutions, debugging strategies
+- **REFERENCE.md** - New commands, settings, file locations
 
 **Update LESSONS_LEARNED.md when:**
-- You make a mistake (document so others don't repeat it)
-- You discover a gotcha or non-obvious issue
-- You make a design decision (explain the reasoning)
-- You solve a tricky problem (share the solution pattern)
-- You refactor something (document why the new way is better)
+- You make a mistake worth documenting
+- You discover a gotcha or design decision
+- You solve a tricky problem
 
 **Update SESSIONS.md when:**
 - You complete significant work
-- You want to document decisions/lessons
-- You fix bugs or make improvements
-
-**Good update example:**
-```markdown
-### ❌ DO NOT use LLM for text similarity
-- Learned in commit 60d0256
-- Use difflib.SequenceMatcher instead (NOT LLM)
-- Comparing same audio transcribed twice = no semantic difference
-- See: modules/stage6_timing_realignment/utils.py::calculate_text_similarity()
-```
-
-**Bad update example:**
-```markdown
-### DO NOT break things
-- Don't make mistakes
-```
-
-**Key principle:** Add specific, actionable guidance with real examples and file references.
+- You want to document context for future work
 
 ---
 
-*This guide was created in session 2025-01-11. It is a living document maintained by AI assistants across sessions. Session history is now in [SESSIONS.md](SESSIONS.md).*
+*This guide structure was created 2025-10-12 to improve navigation and reduce token usage. It is a living document maintained by AI assistants across sessions.*

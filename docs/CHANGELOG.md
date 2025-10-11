@@ -7,6 +7,63 @@ and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking
 
 ---
 
+## [2025-10-12 06:30]
+
+### Changed
+- **Complete documentation refactoring for scalability**
+  - Refactored AI_GUIDE.md from monolithic 19KB to 7.6KB slim entry point (63% reduction)
+  - Created 4 specialized guides in `docs/maintenance/ai/`:
+    - GUIDELINES.md (5.9KB) - Critical DO's/DON'Ts, patterns
+    - WORKFLOWS.md (11KB) - Step-by-step common tasks
+    - TROUBLESHOOTING.md (8.4KB) - Problem solving strategies
+    - REFERENCE.md (10KB) - Quick command/setting lookups
+  - Archived October CHANGELOG entries to CHANGELOG_ARCHIVE_2025-10.md
+  - Created comprehensive DOCUMENTATION_SCALING_STRATEGY.md
+
+**Before refactoring:**
+- AI_GUIDE.md: 19KB (557 lines) - monolithic, growing uncontrollably
+- Total docs: ~183KB (~47K tokens, 23% of context)
+
+**After refactoring:**
+- AI_GUIDE.md: 7.6KB (205 lines) - navigation hub
+- 4 specialized guides: 36KB (1,306 lines) - focused, modular
+- Total docs: ~170KB (~43K tokens, 21.5% of context)
+
+**Benefits:**
+✅ **Modular loading** - AI loads only relevant guide (saves ~10K tokens/session)
+✅ **Scalable** - Each guide can grow independently
+✅ **Better UX** - Clear navigation, focused content
+✅ **Maintainable** - Update specific guides without touching others
+✅ **Discoverable** - AI can find task-specific info faster
+
+**New structure:**
+```
+docs/
+├── AI_GUIDE.md (7.6KB) - Navigation hub
+├── maintenance/
+│   └── ai/
+│       ├── GUIDELINES.md - Critical rules
+│       ├── WORKFLOWS.md - How-to guides
+│       ├── TROUBLESHOOTING.md - Problem solving
+│       └── REFERENCE.md - Quick lookups
+└── maintenance/
+    ├── CHANGELOG_ARCHIVE_2025-10.md - October archive
+    ├── DOCUMENTATION_SCALING_STRATEGY.md - Scaling guide
+    └── AI_GUIDE_REFACTOR_PLAN.md - Original plan
+```
+
+**Files changed:**
+- `docs/AI_GUIDE.md` (refactored, 63% smaller)
+- `docs/maintenance/ai/GUIDELINES.md` (new)
+- `docs/maintenance/ai/WORKFLOWS.md` (new)
+- `docs/maintenance/ai/TROUBLESHOOTING.md` (new)
+- `docs/maintenance/ai/REFERENCE.md` (new)
+- `docs/maintenance/CHANGELOG_ARCHIVE_2025-10.md` (new)
+
+**Test results:** 275/275 tests pass ✅
+
+---
+
 ## [2025-10-12 06:00]
 
 ### Added
@@ -521,6 +578,7 @@ docs/
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
+| 2025-10-12 06:30 | Changed | Complete documentation refactoring (AI guides)    | 275     |
 | 2025-10-12 06:00 | Added   | AI_GUIDE.md refactoring plan for scalability      | 275     |
 | 2025-10-12 05:30 | Added   | Automatic Ollama installation and management      | 275     |
 | 2025-10-12 05:18 | Changed | Simplified stage-specific LLM override            | 275     |
