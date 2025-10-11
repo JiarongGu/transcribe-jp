@@ -335,13 +335,27 @@ git log --oneline -10
 
 ### LESSONS_LEARNED.md - Your First Stop
 
-**[LESSONS_LEARNED.md](LESSONS_LEARNED.md)** is a curated knowledge database of:
+**[LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md)** is a curated knowledge database of:
 - **Mistakes to avoid** - Learn from past errors
 - **Design decisions** - Understand why things are the way they are
 - **Gotchas and patterns** - Non-obvious issues and solutions
 - **Best practices** - Proven patterns for common tasks
 
 **Always read LESSONS_LEARNED.md** before making architectural changes. It contains context that isn't obvious from code.
+
+### Documentation Scaling Strategy ⚠️
+
+**IMPORTANT:** As documentation grows, we risk exceeding token limits in future sessions.
+
+**Current status (2025-10-12):** ~163 KB (~42K tokens, 21% of 200K context)
+
+**See:** [DOCUMENTATION_SCALING_STRATEGY.md](maintenance/DOCUMENTATION_SCALING_STRATEGY.md) for complete strategy.
+
+**Key actions for AI assistants:**
+1. **When CHANGELOG.md > 50KB:** Archive previous month to `maintenance/CHANGELOG_ARCHIVE_YYYY-MM.md`
+2. **When LESSONS_LEARNED.md > 30KB:** Split by topic into `maintenance/lessons/` folder
+3. **Load docs strategically:** Don't read everything upfront - load task-specific docs only
+4. **Monitor monthly:** Run size check script to track growth
 
 **When to add to LESSONS_LEARNED.md:**
 1. You made a mistake worth documenting
