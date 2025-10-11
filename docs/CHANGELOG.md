@@ -7,6 +7,49 @@ and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking
 
 ---
 
+## [2025-10-12 06:00]
+
+### Added
+- **AI_GUIDE.md refactoring plan for long-term scalability**
+  - Created comprehensive refactoring roadmap
+  - Identified that current AI_GUIDE.md won't scale (will hit 40-50KB in 10-15 sessions)
+  - Proposed 3-tier structure: Entry point → Detailed guides → Topic lessons
+  - File: `docs/maintenance/AI_GUIDE_REFACTOR_PLAN.md` (comprehensive plan)
+
+**Current problem:**
+- AI_GUIDE.md is 19KB (557 lines) and growing
+- Trying to be both quick reference AND comprehensive guide
+- Will exceed 50KB target within 10-15 sessions
+
+**Proposed solution:**
+```
+AI_GUIDE.md (SLIM - <10KB, <100 lines)
+    ├── 5 Critical Rules only
+    ├── Links to detailed guides
+    └── Task-specific navigation
+
+maintenance/ai/
+    ├── GUIDELINES.md (DO/DON'T, patterns)
+    ├── WORKFLOWS.md (step-by-step tasks)
+    ├── TROUBLESHOOTING.md (common issues)
+    └── REFERENCE.md (quick lookups)
+```
+
+**Benefits:**
+- Save ~10K tokens per session (load only relevant guide)
+- Each guide can grow independently
+- Scales to 10x current content
+- Better organization and discoverability
+
+**Implementation:** Planned for when AI_GUIDE.md approaches 30KB.
+
+**Files added:**
+- `docs/maintenance/AI_GUIDE_REFACTOR_PLAN.md` - Complete migration plan
+
+**Test results:** 275/275 tests pass ✅
+
+---
+
 ## [2025-10-12 05:30]
 
 ### Added
@@ -478,6 +521,7 @@ docs/
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
+| 2025-10-12 06:00 | Added   | AI_GUIDE.md refactoring plan for scalability      | 275     |
 | 2025-10-12 05:30 | Added   | Automatic Ollama installation and management      | 275     |
 | 2025-10-12 05:18 | Changed | Simplified stage-specific LLM override            | 275     |
 | 2025-10-11 15:00 | Added   | Configurable LLM providers (Ollama, OpenAI)       | 270     |
