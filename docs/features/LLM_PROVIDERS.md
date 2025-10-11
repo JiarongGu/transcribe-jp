@@ -70,7 +70,7 @@ Use FREE Ollama for splitting, paid Claude for polishing:
 ```json
 {
   "llm": {
-    "provider": "ollama",
+    "provider": "ollama",  // Default provider (FREE)
     "ollama": {
       "model": "llama3.2:3b"
     },
@@ -80,15 +80,11 @@ Use FREE Ollama for splitting, paid Claude for polishing:
   },
   "segment_splitting": {
     "enable_llm": true
+    // Uses global "ollama" provider (FREE)
   },
   "text_polishing": {
     "enable": true,
-    "llm_provider": "anthropic",
-    "llm_config": {
-      "anthropic": {
-        "api_key": "sk-ant-..."
-      }
-    }
+    "llm_provider": "anthropic"  // Override to use Anthropic for this stage
   }
 }
 ```
@@ -274,12 +270,13 @@ You can use **different providers for different stages** to optimize cost vs. qu
 ```json
 {
   "llm": {
-    "provider": "ollama",
+    "provider": "ollama",  // Default provider
     "ollama": {
       "model": "llama3.2:3b"
     },
     "anthropic": {
-      "api_key": "sk-ant-..."
+      "api_key": "sk-ant-...",
+      "model": "claude-3-5-haiku-20241022"
     }
   },
   "segment_splitting": {
@@ -288,20 +285,15 @@ You can use **different providers for different stages** to optimize cost vs. qu
   },
   "text_polishing": {
     "enable": true,
-    "llm_provider": "anthropic",           // Override to use Anthropic
-    "llm_config": {
-      "anthropic": {
-        "model": "claude-3-5-haiku-20241022"
-      }
-    }
+    "llm_provider": "anthropic"  // Override to use Anthropic for this stage only
   }
 }
 ```
 
 **How it works:**
-1. Global `llm.provider` sets the default
+1. Global `llm.provider` sets the default provider
 2. Stage-specific `llm_provider` overrides for that stage
-3. Stage-specific `llm_config` merges with global config
+3. All provider settings come from the global `llm.{provider}` section
 
 ---
 
@@ -361,16 +353,16 @@ Approximate costs for processing **1 hour of audio transcription**:
 {
   "segment_splitting": {
     "enable_llm": true,
-    "llm_provider": "ollama",              // Override global provider
-    "llm_config": {
-      "ollama": {
-        "model": "llama3.2:3b"            // Stage-specific model
-      },
-      "max_tokens": 512                    // Stage-specific param
-    }
+    "llm_provider": "ollama"  // Override to use different provider for this stage
+  },
+  "text_polishing": {
+    "enable": true,
+    "llm_provider": "anthropic"  // Override to use different provider for this stage
   }
 }
 ```
+
+**Note:** Provider settings (model, api_key, etc.) come from global `llm.{provider}` section.
 
 ---
 

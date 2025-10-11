@@ -1,14 +1,14 @@
 {
-  "_comment": "This is an example config.local.json file for local overrides",
-  "_comment2": "Copy this to config.local.json and customize (it's gitignored)",
-  "_comment3": "Only include settings you want to override from config.json",
+  // This is an example config.local.json file for local overrides
+  // Copy this to config.local.json and customize (it's gitignored)
+  // Only include settings you want to override from config.json
 
   "whisper": {
     "device": "cuda"
   },
 
   "llm": {
-    "_comment_provider": "Choose: 'ollama' (free, local), 'anthropic' (paid, high quality), or 'openai' (paid)",
+    // Choose provider: "ollama" (free, local), "anthropic" (paid, high quality), or "openai" (paid)
     "provider": "anthropic",
 
     "ollama": {
@@ -28,73 +28,63 @@
   },
 
   "segment_splitting": {
-    "enable_llm": true,
-    "_comment_override": "Uncomment to use different provider for this stage",
-    "_example_llm_provider": "ollama",
-    "_example_llm_config": {
-      "ollama": {
-        "model": "llama3.2:3b"
-      }
-    }
+    "enable_llm": true
+    // "llm_provider": "ollama"  // Uncomment to override global provider for this stage
   },
 
   "text_polishing": {
-    "enable": true,
-    "_comment_override": "Uncomment to use different provider for this stage",
-    "_example_llm_provider": "anthropic",
-    "_example_llm_config": {
-      "anthropic": {
-        "api_key": "sk-ant-..."
-      }
-    }
+    "enable": true
+    // "llm_provider": "anthropic"  // Uncomment to override global provider for this stage
   },
 
   "timing_realignment": {
-    "enable": true,
-    "method": "time_based"
-  },
+    "enable": true
+  }
 
-  "_examples": {
-    "_comment": "Example configurations - DO NOT include this section in your actual config.local.json",
+  // ============================================================================
+  // EXAMPLE CONFIGURATIONS (remove this section in your actual config.local.json)
+  // ============================================================================
 
-    "example_free_ollama_only": {
-      "llm": {
-        "provider": "ollama",
-        "ollama": {
-          "model": "llama3.2:3b"
-        }
-      }
-    },
+  // Example 1: FREE Ollama only
+  // {
+  //   "llm": {
+  //     "provider": "ollama",
+  //     "ollama": {
+  //       "model": "llama3.2:3b"
+  //     }
+  //   }
+  // }
 
-    "example_anthropic_only": {
-      "llm": {
-        "provider": "anthropic",
-        "anthropic": {
-          "api_key": "sk-ant-..."
-        }
-      }
-    },
+  // Example 2: Anthropic only
+  // {
+  //   "llm": {
+  //     "provider": "anthropic",
+  //     "anthropic": {
+  //       "api_key": "sk-ant-..."
+  //     }
+  //   }
+  // }
 
-    "example_hybrid_best_value": {
-      "_comment": "Use FREE Ollama for splitting, paid Claude for polishing",
-      "llm": {
-        "provider": "ollama",
-        "ollama": {
-          "model": "llama3.2:3b"
-        },
-        "anthropic": {
-          "api_key": "sk-ant-..."
-        }
-      },
-      "segment_splitting": {
-        "enable_llm": true
-      },
-      "text_polishing": {
-        "enable": true,
-        "llm_provider": "anthropic"
-      }
-    }
-  },
+  // Example 3: Hybrid - FREE Ollama for splitting, paid Claude for polishing
+  // {
+  //   "llm": {
+  //     "provider": "ollama",
+  //     "ollama": {
+  //       "model": "llama3.2:3b"
+  //     },
+  //     "anthropic": {
+  //       "api_key": "sk-ant-..."
+  //     }
+  //   },
+  //   "segment_splitting": {
+  //     "enable_llm": true
+  //     // Uses global "ollama" provider (FREE)
+  //   },
+  //   "text_polishing": {
+  //     "enable": true,
+  //     "llm_provider": "anthropic"  // Override to use Anthropic for this stage
+  //   }
+  // }
 
-  "_see_also": "For detailed LLM configuration guide, see: docs/LLM_PROVIDERS.md"
+  // For detailed LLM configuration guide, see: docs/features/LLM_PROVIDERS.md
 }

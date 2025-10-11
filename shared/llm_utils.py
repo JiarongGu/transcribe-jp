@@ -145,16 +145,13 @@ def create_llm_provider(config: Dict[str, Any], stage_name: Optional[str] = None
     """
     llm_config = config.get("llm", {})
 
-    # Check for stage-specific override
+    # Check for stage-specific provider override
     if stage_name:
         stage_config = config.get(stage_name, {})
         if "llm_provider" in stage_config:
-            # Stage has its own provider override
+            # Stage overrides provider - use global llm config with different provider
             provider_name = stage_config.get("llm_provider")
-            # Merge stage-specific LLM config with global LLM config
-            stage_llm_config = {**llm_config, **stage_config.get("llm_config", {})}
-            stage_llm_config["provider"] = provider_name
-            llm_config = stage_llm_config
+            llm_config = {**llm_config, "provider": provider_name}
 
     provider_name = llm_config.get("provider", "anthropic").lower()
 

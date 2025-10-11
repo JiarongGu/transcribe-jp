@@ -520,14 +520,11 @@ You can use different providers for different stages to optimize costs:
   },
   "segment_splitting": {
     "enable_llm": true
+    // Uses global "ollama" provider (FREE)
   },
   "text_polishing": {
     "enable": true,
-    "llm_provider": "anthropic",
-    "llm_config": {
-      "anthropic_api_key": "sk-ant-...",
-      "model": "claude-3-5-haiku-20241022"
-    }
+    "llm_provider": "anthropic"  // Override to use Anthropic for this stage
   }
 }
 ```
