@@ -43,6 +43,14 @@ This project uses a **two-audience documentation system**:
   - Common tasks and troubleshooting
   - Written for AI assistants but applicable to all developers
 
+### Feature Documentation
+
+- **[features/](features/)** - Individual pipeline stage documentation
+  - Detailed guides for each of the 9 stages
+  - Configuration examples
+  - Usage patterns and troubleshooting
+  - See [features/README.md](features/README.md) for complete index
+
 ### Change Tracking
 
 - **[CHANGELOG.md](CHANGELOG.md)** - All notable changes to the project
@@ -72,6 +80,14 @@ This project uses a **two-audience documentation system**:
 1. Read [../README.md](../README.md#configuration) for quick start config
 2. See [core/CONFIGURATION.md](core/CONFIGURATION.md) for complete reference
 3. Understand stage behavior in [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md)
+4. Check [features/](features/) for individual stage deep-dives
+
+### For Understanding a Specific Stage
+
+1. Check [features/README.md](features/README.md) for stage list
+2. Read the specific stage documentation (e.g., [features/STAGE6_TIMING_REALIGNMENT.md](features/STAGE6_TIMING_REALIGNMENT.md))
+3. Review configuration in [core/CONFIGURATION.md](core/CONFIGURATION.md)
+4. Check implementation in `modules/stageN_*/` folder
 
 ---
 
@@ -87,10 +103,18 @@ transcribe-jp/
 │   ├── AI_GUIDE.md              # AI assistant quick reference
 │   ├── CHANGELOG.md             # Change history
 │   ├── SESSIONS.md              # Development session history
-│   └── core/                    # Core project documentation
-│       ├── ARCHITECTURE.md      # System design and pipeline flow
-│       ├── CONFIGURATION.md     # Complete config reference
-│       └── PIPELINE_STAGES.md   # Detailed stage breakdown
+│   ├── core/                    # Core project documentation
+│   │   ├── ARCHITECTURE.md      # System design and pipeline flow
+│   │   ├── CONFIGURATION.md     # Complete config reference
+│   │   └── PIPELINE_STAGES.md   # Detailed stage breakdown
+│   ├── features/                # Individual stage documentation
+│   │   ├── README.md            # Features index
+│   │   ├── STAGE4_SEGMENT_SPLITTING.md
+│   │   ├── STAGE5_HALLUCINATION_FILTERING.md
+│   │   ├── STAGE6_TIMING_REALIGNMENT.md
+│   │   └── ... (9 stages)
+│   └── maintenance/             # Historical technical records
+│       └── TIMING_REALIGNMENT_IMPROVEMENTS_2025-10-10.md
 │
 ├── tests/                       # Test suite
 │   ├── README.md                # Testing documentation
@@ -120,7 +144,10 @@ transcribe-jp/
 → See [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md)
 
 ### "How do I configure stage X?"
-→ See [core/CONFIGURATION.md](core/CONFIGURATION.md)
+→ See [core/CONFIGURATION.md](core/CONFIGURATION.md) or [features/STAGEX_NAME.md](features/)
+
+### "How does Stage 6 Timing Realignment work?"
+→ See [features/STAGE6_TIMING_REALIGNMENT.md](features/STAGE6_TIMING_REALIGNMENT.md)
 
 ### "What's the project structure?"
 → See [core/ARCHITECTURE.md](core/ARCHITECTURE.md#directory-structure)
@@ -144,6 +171,7 @@ transcribe-jp/
 - **core/ARCHITECTURE.md** - When modifying system design or pipeline structure
 - **core/CONFIGURATION.md** - When adding/changing config options
 - **core/PIPELINE_STAGES.md** - When modifying stage behavior
+- **features/STAGEX_*.md** - When modifying specific stage implementation or behavior
 - **AI_GUIDE.md** - When discovering new patterns or lessons learned
 - **CHANGELOG.md** - For ALL significant changes (required)
 - **SESSIONS.md** - When completing significant work or making key decisions
