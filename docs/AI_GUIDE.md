@@ -42,6 +42,7 @@ This document provides AI-specific context for working on transcribe-jp. It focu
    - User explicitly requested this behavior
    - Create descriptive commits with test results
    - Use co-authorship footer (see git commit template below)
+   - Update CHANGELOG.md with Date + Time format (e.g., [2025-01-11 14:30]) instead of git hash
 
 3. **Update documentation for ALL significant changes**
    - **CHANGELOG.md** - What changed, when, impact (REQUIRED)
@@ -98,8 +99,9 @@ This document provides AI-specific context for working on transcribe-jp. It focu
 
 6. **Do NOT commit without updating CHANGELOG.md**
    - User explicitly requested this
-   - CHANGELOG = what/when/impact
+   - CHANGELOG = what/when/impact (use Date + Time format: [2025-01-11 14:30])
    - AI_GUIDE = why/lessons/context
+   - Never use git hash in CHANGELOG headers - use Date + Time instead
 
 ---
 

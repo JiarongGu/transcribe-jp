@@ -3,20 +3,130 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project uses git commit hashes for version tracking.
+and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking.
 
 ---
 
-## [Unreleased]
+## [2025-10-11 12:03]
 
 ### Added
-### Changed
-### Fixed
-### Removed
+- **config.local.json support with deep merge functionality**
+  - Local config file support for user-specific settings
+  - Deep merge of config.local.json with config.json
+  - Priority: config.local.json > config.json > defaults
+  - Added to .gitignore for security
+  - File: `core/config_loader.py`
+
+**Impact:** Users can now override config settings without modifying version-controlled config.json.
 
 ---
 
-## [ca26b37] - 2025-01-11
+## [2025-10-11 11:58]
+
+### Changed
+- **Streamlined README.md for user focus**
+  - Removed internal development details
+  - Focused on user-facing features and usage
+  - Improved readability and structure
+
+**Impact:** Better documentation for end users.
+
+---
+
+## [2025-10-11 11:56]
+
+### Added
+- **docs/features/ folder for individual stage documentation**
+  - Separate documentation for each pipeline stage
+  - Better organization of stage-specific information
+  - Easier to find and update stage documentation
+
+**Impact:** Improved documentation structure and maintainability.
+
+---
+
+## [2025-10-11 11:50]
+
+### Changed
+- **Restructured documentation for better Claude Code compatibility**
+  - Reorganized docs/ folder structure
+  - Improved navigation and cross-references
+  - Better integration with AI assistant tools
+
+**Impact:** Enhanced AI assistant understanding of project structure.
+
+---
+
+## [2025-10-11 11:40]
+
+### Added
+- **API key security documentation and gitignore rules**
+  - Added security guidelines for API keys
+  - Updated .gitignore to exclude sensitive files
+  - Documentation on safe API key handling
+  - File: `docs/core/SECURITY.md`
+
+**Impact:** Prevents accidental commit of API keys and sensitive data.
+
+---
+
+## [2025-10-11 11:37]
+
+### Added
+- **MIT License**
+  - Added MIT License to project
+  - Open source licensing
+  - File: `LICENSE`
+
+### Changed
+- **Secured API key in config**
+  - Removed hardcoded API keys from config.json
+  - Added placeholder values
+  - Updated documentation on API key setup
+
+**Impact:** Project is now properly licensed and API keys are secured.
+
+---
+
+## [2025-10-11 02:02]
+
+### Changed
+- **Moved session history to docs/SESSIONS.md**
+  - Session history moved from AI_GUIDE.md to dedicated file
+  - Improved accessibility for both humans and AI
+  - Better organization of historical information
+  - File: `docs/SESSIONS.md`
+
+**Impact:** Session history is now accessible to all team members, not just AI assistants.
+
+---
+
+## [2025-10-11 01:55]
+
+### Changed
+- **Streamlined AI_GUIDE.md to remove redundancy**
+  - Removed duplicate information already in docs/
+  - Focused on AI-specific guidelines
+  - Improved clarity and conciseness
+
+**Impact:** Less redundancy, easier to maintain AI guidelines.
+
+---
+
+## [2025-10-11 01:50]
+
+### Added
+- **CHANGELOG.md and improved documentation guidelines**
+  - Added this changelog file
+  - Updated documentation guidelines in AI_GUIDE.md
+  - Required changelog updates for all commits
+  - File: `docs/CHANGELOG.md`
+
+**Impact:** Better tracking of project changes over time.
+
+---
+
+## [2025-10-11 01:48]
 
 ### Fixed
 - **Stage 5 filter order bug**: Fixed timing_validation re-filtering issue where re-transcribed segments could contain hallucination phrases
@@ -33,7 +143,7 @@ and this project uses git commit hashes for version tracking.
 
 ---
 
-## [d1b5760] - 2025-01-11
+## [2025-10-11 01:30]
 
 ### Added
 - **AI_GUIDE.md**: Living document for AI assistant continuity
@@ -48,7 +158,7 @@ and this project uses git commit hashes for version tracking.
 
 ---
 
-## [60d0256] - 2025-01-11
+## [2025-10-11 01:16]
 
 ### Removed
 - **Redundant `enable_remove_irrelevant` feature** from Stage 6
@@ -74,7 +184,7 @@ and this project uses git commit hashes for version tracking.
 
 ---
 
-## [c4eafd2] - 2025-01-11
+## [2025-10-10 21:28]
 
 ### Added
 - **Full pipeline E2E test** (`tests/e2e/test_full_pipeline.py`)
@@ -96,7 +206,7 @@ and this project uses git commit hashes for version tracking.
 
 ---
 
-## Stage 6 Timing Realignment Improvements (commits c4eafd2, 60d0256)
+## [2025-10-10 21:00] - Stage 6 Timing Realignment Improvements
 
 ### Changed
 - **Text similarity algorithm upgraded**
@@ -133,7 +243,7 @@ and this project uses git commit hashes for version tracking.
 
 ---
 
-## [000d91b] - Initial Project
+## [2025-10-10 21:14] - Initial Project
 
 ### Added
 - Initial 9-stage transcription pipeline
@@ -146,13 +256,22 @@ and this project uses git commit hashes for version tracking.
 
 ## Version History Summary
 
-| Commit  | Date       | Type    | Summary                                           | Tests   |
-|---------|------------|---------|---------------------------------------------------|---------|
-| ca26b37 | 2025-01-11 | Fix     | Stage 5 re-filtering after timing_validation      | 261     |
-| d1b5760 | 2025-01-11 | Added   | AI_GUIDE.md for AI assistant continuity           | 257     |
-| 60d0256 | 2025-01-11 | Removed | Redundant enable_remove_irrelevant feature        | 257     |
-| c4eafd2 | 2025-01-11 | Added   | Full pipeline E2E test + test organization        | 257     |
-| 000d91b | Initial    | Added   | Initial 9-stage pipeline project                  | 257     |
+| Date & Time      | Type    | Summary                                           | Tests   |
+|------------------|---------|---------------------------------------------------|---------|
+| 2025-10-11 12:03 | Added   | config.local.json support with deep merge         | 261     |
+| 2025-10-11 11:58 | Changed | Streamlined README.md for user focus              | 261     |
+| 2025-10-11 11:56 | Added   | docs/features/ folder for stage documentation     | 261     |
+| 2025-10-11 11:50 | Changed | Restructured docs for Claude Code compatibility   | 261     |
+| 2025-10-11 11:40 | Added   | API key security documentation and gitignore      | 261     |
+| 2025-10-11 11:37 | Added   | MIT License and secured API keys                  | 261     |
+| 2025-10-11 02:02 | Changed | Moved session history to docs/SESSIONS.md         | 261     |
+| 2025-10-11 01:55 | Changed | Streamlined AI_GUIDE.md to remove redundancy      | 261     |
+| 2025-10-11 01:50 | Added   | CHANGELOG.md and documentation guidelines         | 261     |
+| 2025-10-11 01:48 | Fix     | Stage 5 re-filtering after timing_validation      | 261     |
+| 2025-10-11 01:30 | Added   | AI_GUIDE.md for AI assistant continuity           | 257     |
+| 2025-10-11 01:16 | Removed | Redundant enable_remove_irrelevant feature        | 257     |
+| 2025-10-10 21:28 | Added   | Full pipeline E2E test + test organization        | 257     |
+| 2025-10-10 21:14 | Added   | Initial 9-stage pipeline project                  | 257     |
 
 ---
 
@@ -160,16 +279,15 @@ and this project uses git commit hashes for version tracking.
 
 When making significant changes:
 
-1. **Add entry at the top** under `[Unreleased]` section
+1. **Add entry at the top** with current Date + Time in format [YYYY-MM-DD HH:MM]
 2. **Use clear categories**: Added, Changed, Fixed, Removed
-3. **Include git commit hash** and date when committing
-4. **Explain the impact** - why this change matters
-5. **List affected files** - help future developers find code
-6. **Move to versioned section** when committing with commit hash
+3. **Explain the impact** - why this change matters
+4. **List affected files** - help future developers find code
+5. **Update the Version History Summary table** with the new entry
 
 **Example entry:**
 ```markdown
-## [abc1234] - 2025-01-12
+## [2025-01-12 14:30]
 
 ### Added
 - New Japanese particle normalization in Stage 7
