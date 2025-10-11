@@ -8,19 +8,93 @@
   },
 
   "llm": {
-    "anthropic_api_key": "your-actual-api-key-here"
+    "_comment_provider": "Choose: 'ollama' (free, local), 'anthropic' (paid, high quality), or 'openai' (paid)",
+    "provider": "anthropic",
+
+    "ollama": {
+      "model": "llama3.2:3b",
+      "base_url": "http://localhost:11434"
+    },
+
+    "anthropic": {
+      "api_key": "sk-ant-api03-your-actual-key-here",
+      "model": "claude-3-5-haiku-20241022"
+    },
+
+    "openai": {
+      "api_key": "sk-proj-your-actual-key-here",
+      "model": "gpt-4o-mini"
+    }
   },
 
   "segment_splitting": {
-    "enable_llm": true
+    "enable_llm": true,
+    "_comment_override": "Uncomment to use different provider for this stage",
+    "_example_llm_provider": "ollama",
+    "_example_llm_config": {
+      "ollama": {
+        "model": "llama3.2:3b"
+      }
+    }
   },
 
   "text_polishing": {
-    "enable": true
+    "enable": true,
+    "_comment_override": "Uncomment to use different provider for this stage",
+    "_example_llm_provider": "anthropic",
+    "_example_llm_config": {
+      "anthropic": {
+        "api_key": "sk-ant-..."
+      }
+    }
   },
 
   "timing_realignment": {
     "enable": true,
     "method": "time_based"
-  }
+  },
+
+  "_examples": {
+    "_comment": "Example configurations - DO NOT include this section in your actual config.local.json",
+
+    "example_free_ollama_only": {
+      "llm": {
+        "provider": "ollama",
+        "ollama": {
+          "model": "llama3.2:3b"
+        }
+      }
+    },
+
+    "example_anthropic_only": {
+      "llm": {
+        "provider": "anthropic",
+        "anthropic": {
+          "api_key": "sk-ant-..."
+        }
+      }
+    },
+
+    "example_hybrid_best_value": {
+      "_comment": "Use FREE Ollama for splitting, paid Claude for polishing",
+      "llm": {
+        "provider": "ollama",
+        "ollama": {
+          "model": "llama3.2:3b"
+        },
+        "anthropic": {
+          "api_key": "sk-ant-..."
+        }
+      },
+      "segment_splitting": {
+        "enable_llm": true
+      },
+      "text_polishing": {
+        "enable": true,
+        "llm_provider": "anthropic"
+      }
+    }
+  },
+
+  "_see_also": "For detailed LLM configuration guide, see: docs/LLM_PROVIDERS.md"
 }

@@ -239,8 +239,8 @@ python -c "import torch; print(torch.cuda.is_available())"
 ### For Developers
 - **[Documentation Hub](docs/README.md)** - Complete documentation index
 - **[Architecture](docs/core/ARCHITECTURE.md)** - System design and pipeline flow
-- **[AI Guide](docs/AI_GUIDE.md)** - Development guidelines and best practices
-- **[Testing](tests/README.md)** - Testing documentation (261 unit tests)
+- **[AI Guide](docs/maintenance/AI_GUIDE.md)** - Development guidelines and best practices
+- **[Testing](tests/README.md)** - Testing documentation (270 unit tests)
 
 ---
 

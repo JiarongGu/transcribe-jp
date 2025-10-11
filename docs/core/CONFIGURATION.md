@@ -397,43 +397,156 @@ Final timing QA using Whisper to verify text matches audio.
 
 ### Global: LLM Settings
 
-Connection settings for Claude AI (used in Stages 4 and 6).
+Connection settings for LLM providers (used in Stages 4 and 6).
 
 ```json
 {
   "llm": {
-    "provider": "anthropic",
-    "anthropic_api_key": "sk-ant-api03-...",
-    "model": "claude-sonnet-4-5-20250929",
+    "provider": "ollama",
+    "model": "llama3.2:3b",
     "max_tokens": 1024,
-    "temperature": 0.0
+    "temperature": 0.0,
+    "ollama_base_url": "http://localhost:11434",
+    "anthropic_api_key": "<your-api-key>",
+    "openai_api_key": "<your-api-key>"
   }
 }
 ```
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `provider` | string | `"anthropic"` | LLM provider (only "anthropic" supported) |
-| `anthropic_api_key` | string | `""` | Your Claude API key |
-| `model` | string | `"claude-sonnet-4-5-20250929"` | Claude model to use |
+| `provider` | string | `"ollama"` | LLM provider: `"ollama"`, `"anthropic"`, or `"openai"` |
+| `model` | string | `"llama3.2:3b"` | Model name (provider-specific) |
 | `max_tokens` | integer | `1024` | Max tokens per API response |
 | `temperature` | float | `0.0` | Sampling temperature (0 = deterministic) |
+| `ollama_base_url` | string | `"http://localhost:11434"` | Ollama server URL (only for Ollama) |
+| `timeout` | integer | `30` | Request timeout in seconds (only for Ollama) |
+| `anthropic_api_key` | string | `""` | Claude API key (only for Anthropic) |
+| `api_key_env` | string | `"ANTHROPIC_API_KEY"` | Environment variable for API key |
+| `openai_api_key` | string | `""` | OpenAI API key (only for OpenAI) |
 
-**Getting an API Key:**
+#### Provider: Ollama (Local, FREE)
+
+**Recommended for: Segment splitting** (simple task, cost-effective)
+
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2:3b",
+    "ollama_base_url": "http://localhost:11434",
+    "max_tokens": 512
+  }
+}
+```
+
+**Setup:**
+1. Install Ollama: https://ollama.com/download
+2. Pull a model: `ollama pull llama3.2:3b`
+3. Start Ollama (runs automatically on Windows/Mac)
+
+**Recommended models for Japanese:**
+- `llama3.2:3b` - Fast, good for simple tasks (2GB RAM)
+- `gemma2:2b` - Very fast, lightweight (1.6GB RAM)
+- `qwen2.5:3b` - Good Japanese support (2.3GB RAM)
+
+**Pros:** FREE, private, no API costs, fast for local use
+**Cons:** Requires local GPU/CPU, lower quality than Claude
+
+#### Provider: Anthropic (Cloud, Paid)
+
+**Recommended for: Text polishing** (quality matters)
+
+```json
+{
+  "llm": {
+    "provider": "anthropic",
+    "anthropic_api_key": "sk-ant-api03-...",
+    "model": "claude-3-5-haiku-20241022",
+    "max_tokens": 1024
+  }
+}
+```
+
+**Setup:**
 1. Sign up at https://console.anthropic.com/
-2. Navigate to API Keys section
-3. Create new key
-4. Add to config.json
+2. Create API key
+3. Add to config.json or set `ANTHROPIC_API_KEY` environment variable
 
-**Model Options:**
-- `claude-sonnet-4-5-20250929`: Best quality (recommended)
-- `claude-3-5-sonnet-20240620`: Good balance
-- `claude-3-haiku-20240307`: Fastest, cheapest
+**Model options:**
+- `claude-3-5-haiku-20241022` - Fast, cheap (~$0.25-1.00/hour)
+- `claude-3-5-sonnet-20241022` - High quality (~$3-15/hour)
+- `claude-sonnet-4-5-20250929` - Highest quality, expensive (~$15-75/hour)
 
-**Notes:**
-- Required for `segment_splitting.enable` and `text_polishing.enable`
-- `temperature: 0.0` ensures consistent, deterministic results
-- `max_tokens: 1024` is sufficient for subtitle processing
+**Pros:** Highest quality, best Japanese support, reliable
+**Cons:** Paid API, requires internet, per-token costs
+
+#### Provider: OpenAI (Cloud, Paid)
+
+**Alternative to Anthropic**
+
+```json
+{
+  "llm": {
+    "provider": "openai",
+    "openai_api_key": "sk-proj-...",
+    "model": "gpt-4o-mini",
+    "max_tokens": 1024
+  }
+}
+```
+
+**Setup:**
+1. Sign up at https://platform.openai.com/
+2. Create API key
+3. Add to config.json or set `OPENAI_API_KEY` environment variable
+
+**Model options:**
+- `gpt-4o-mini` - Fast, cheap (~$0.15-0.60/hour)
+- `gpt-4o` - High quality (~$5-20/hour)
+
+**Pros:** Good quality, widely available
+**Cons:** Paid API, slightly worse than Claude for Japanese
+
+#### Stage-Specific LLM Override
+
+You can use different providers for different stages to optimize costs:
+
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "model": "llama3.2:3b"
+  },
+  "segment_splitting": {
+    "enable_llm": true
+  },
+  "text_polishing": {
+    "enable": true,
+    "llm_provider": "anthropic",
+    "llm_config": {
+      "anthropic_api_key": "sk-ant-...",
+      "model": "claude-3-5-haiku-20241022"
+    }
+  }
+}
+```
+
+This uses **FREE Ollama** for splitting, **paid Claude** for polishing.
+
+**Cost comparison for 1 hour transcription:**
+- Ollama (local): **$0** - FREE!
+- Anthropic Haiku: ~$0.25-1.00
+- Anthropic Sonnet: ~$3.00-15.00
+- OpenAI GPT-4o-mini: ~$0.15-0.60
+
+#### Configuration Examples
+
+See [LLM_PROVIDERS.md](../LLM_PROVIDERS.md) for comprehensive LLM provider guide and [config.local.json.example](../../config.local.json.example) for configuration examples.
+
+**Recommended setup (cost-effective):**
+- Global: Ollama for segment splitting (FREE)
+- Stage 7: Claude Haiku for text polishing (cheap, high quality)
 
 ---
 

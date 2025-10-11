@@ -1,7 +1,7 @@
 """LLM-powered subtitle polishing"""
 
-import os
 import json
+from shared.llm_utils import create_llm_provider, parse_json_response
 
 
 def polish_segments_with_llm(segments, config):
@@ -11,23 +11,16 @@ def polish_segments_with_llm(segments, config):
     if not text_polishing_config.get("enable", False):
         return segments
 
-    llm_config = config.get("llm", {})
+    # Create LLM provider (with stage-specific config if available)
+    llm_provider = create_llm_provider(config, stage_name="text_polishing")
 
-    provider = llm_config.get("provider", "anthropic")
-    if provider != "anthropic":
+    if not llm_provider:
+        # LLM provider not available, skip polishing
         return segments
 
     try:
-        from anthropic import Anthropic
-
-        # Get API key
-        api_key = llm_config.get("anthropic_api_key") or os.environ.get(llm_config.get("api_key_env", "ANTHROPIC_API_KEY"))
-
-        if not api_key:
-            print(f"  - Warning: API key not found, skipping polishing")
-            return segments
-
-        client = Anthropic(api_key=api_key)
+        # Get LLM config for parameters
+        llm_config = config.get("llm", {})
 
         # Process in batches to reduce API calls
         batch_size = text_polishing_config.get("batch_size", 10)
@@ -79,29 +72,13 @@ JSON形式で、整形後のテキストを配列で返してください。
 必ずJSONのみを返してください。説明文は不要です。"""
 
             try:
-                message = client.messages.create(
-                    model=llm_config.get("model", "claude-3-5-haiku-20241022"),
-                    max_tokens=llm_config.get("max_tokens", 1024),
-                    temperature=llm_config.get("temperature", 0.0),
-                    messages=[{"role": "user", "content": prompt}]
-                )
+                # Generate response using provider
+                max_tokens = llm_config.get("max_tokens", 1024)
+                temperature = llm_config.get("temperature", 0.0)
+                response_text = llm_provider.generate(prompt, max_tokens=max_tokens, temperature=temperature)
 
-                response_text = message.content[0].text.strip()
-
-                # Parse JSON response - handle markdown code blocks
-                if response_text.startswith("```"):
-                    lines = response_text.split('\n')
-                    json_lines = []
-                    in_code_block = False
-                    for line in lines:
-                        if line.startswith("```"):
-                            in_code_block = not in_code_block
-                            continue
-                        if in_code_block or (not line.startswith("```") and json_lines):
-                            json_lines.append(line)
-                    response_text = '\n'.join(json_lines).strip()
-
-                result = json.loads(response_text)
+                # Parse JSON response
+                result = parse_json_response(response_text)
                 polished_texts = result.get("polished", texts)
 
                 # Replace texts in segments
@@ -145,29 +122,13 @@ JSON形式で、整形後のテキストを配列で返してください。
 
 必ずJSONのみを返してください。説明文は不要です。"""
 
-                            message = client.messages.create(
-                                model=llm_config.get("model", "claude-3-5-haiku-20241022"),
-                                max_tokens=llm_config.get("max_tokens", 1024),
-                                temperature=llm_config.get("temperature", 0.0),
-                                messages=[{"role": "user", "content": prompt}]
-                            )
+                            # Generate response using provider
+                            max_tokens = llm_config.get("max_tokens", 1024)
+                            temperature = llm_config.get("temperature", 0.0)
+                            response_text = llm_provider.generate(prompt, max_tokens=max_tokens, temperature=temperature)
 
-                            response_text = message.content[0].text.strip()
-
-                            # Parse JSON response - handle markdown code blocks
-                            if response_text.startswith("```"):
-                                lines = response_text.split('\n')
-                                json_lines = []
-                                in_code_block = False
-                                for line in lines:
-                                    if line.startswith("```"):
-                                        in_code_block = not in_code_block
-                                        continue
-                                    if in_code_block or (not line.startswith("```") and json_lines):
-                                        json_lines.append(line)
-                                response_text = '\n'.join(json_lines).strip()
-
-                            result = json.loads(response_text)
+                            # Parse JSON response
+                            result = parse_json_response(response_text)
                             polished_text = result.get("polished", [text])[0]
 
                             # Add polished segment
@@ -196,9 +157,6 @@ JSON形式で、整形後のテキストを配列で返してください。
         print(f"  - Completed: {len(polished_segments)}/{total_segments} segments polished")
         return polished_segments
 
-    except ImportError:
-        print(f"  - Warning: anthropic package not installed, skipping polishing")
-        return segments
     except Exception as e:
         print(f"  - Warning: Polishing failed: {e}")
         return segments

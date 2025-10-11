@@ -1,8 +1,8 @@
 """LLM-powered intelligent line splitting"""
 
-import os
 import json
 import re
+from shared.llm_utils import create_llm_provider, parse_json_response
 
 
 def clean_for_matching(text):
@@ -84,27 +84,14 @@ def split_long_segment_with_llm(text, start_time, end_time, word_timestamps, con
 
     duration = end_time - start_time
 
-    llm_config = config.get("llm", {})
-    provider = llm_config.get("provider", "anthropic")
+    # Create LLM provider (with stage-specific config if available)
+    llm_provider = create_llm_provider(config, stage_name="segment_splitting")
 
-    if provider != "anthropic":
-        # Only Anthropic supported for now
+    if not llm_provider:
+        # LLM provider not available, skip splitting
         return [(start_time, end_time, text, word_timestamps if word_timestamps else [])]
 
     try:
-        from anthropic import Anthropic
-
-        # Get API key from config or environment
-        api_key = llm_config.get("anthropic_api_key")
-        if not api_key:
-            api_key_env = llm_config.get("api_key_env", "ANTHROPIC_API_KEY")
-            api_key = os.environ.get(api_key_env)
-
-        if not api_key:
-            print(f"  - Warning: API key not found, skipping LLM splitting")
-            return [(start_time, end_time, text, word_timestamps if word_timestamps else [])]
-
-        client = Anthropic(api_key=api_key)
 
         # Build prompt for splitting
         prompt = f"""日本語の字幕テキストを自然な区切りで分割してください。
@@ -124,14 +111,13 @@ JSON形式で、分割後のテキストを配列で返してください。
 
 必ずJSONのみを返してください。説明文は不要です。"""
 
-        message = client.messages.create(
-            model=llm_config.get("model", "claude-3-5-haiku-20241022"),
-            max_tokens=llm_config.get("max_tokens", 1024),
-            temperature=llm_config.get("temperature", 0.0),
-            messages=[{"role": "user", "content": prompt}]
-        )
+        # Get LLM config for parameters
+        llm_config = config.get("llm", {})
+        max_tokens = llm_config.get("max_tokens", 1024)
+        temperature = llm_config.get("temperature", 0.0)
 
-        response_text = message.content[0].text.strip()
+        # Generate response using provider
+        response_text = llm_provider.generate(prompt, max_tokens=max_tokens, temperature=temperature)
 
         # Check if response is empty
         if not response_text:
@@ -139,23 +125,8 @@ JSON形式で、分割後のテキストを配列で返してください。
             return [(start_time, end_time, text)]
 
         # Parse JSON response - handle markdown code blocks
-        # Remove markdown code blocks if present
-        if response_text.startswith("```"):
-            # Extract JSON from code block
-            lines = response_text.split('\n')
-            json_lines = []
-            in_code_block = False
-            for line in lines:
-                if line.startswith("```"):
-                    in_code_block = not in_code_block
-                    continue
-                if in_code_block or (not line.startswith("```") and json_lines):
-                    json_lines.append(line)
-            response_text = '\n'.join(json_lines).strip()
-
-        # Parse JSON response
         try:
-            result = json.loads(response_text)
+            result = parse_json_response(response_text)
             segments = result.get("segments", [text])
         except json.JSONDecodeError as e:
             print(f"  - Warning: Failed to parse LLM response as JSON at {start_time:.1f}s")
@@ -535,10 +506,6 @@ JSON形式で、分割後のテキストを配列で返してください。
             print(f"  - LLM split 1 segment ({duration:.1f}s) into {len(split_segments)} segments (proportional timing)")
             return split_segments
 
-    except ImportError:
-        print(f"  - Warning: anthropic package not installed, skipping LLM splitting")
-        print(f"  - Install with: pip install anthropic")
-        return [(start_time, end_time, text, word_timestamps if word_timestamps else [])]
     except Exception as e:
         print(f"  - Warning: LLM splitting failed: {e}")
         return [(start_time, end_time, text, word_timestamps if word_timestamps else [])]

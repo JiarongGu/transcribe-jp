@@ -7,6 +7,105 @@ and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking
 
 ---
 
+## [2025-10-11 15:00]
+
+### Added
+- **Configurable LLM provider system with Ollama support**
+  - New abstraction layer supporting multiple LLM providers
+  - Added Ollama provider (local, FREE alternative to Claude)
+  - Added OpenAI provider (alternative cloud option)
+  - Kept Anthropic Claude provider (existing, enhanced)
+  - Stage-specific LLM override support for cost optimization
+  - File: `shared/llm_utils.py` (new, 186 lines)
+  - Updated: `modules/stage4_segment_splitting/llm_splitter.py`
+  - Updated: `modules/stage7_text_polishing/processor.py`
+
+- **docs/features/LLM_PROVIDERS.md**: Comprehensive LLM configuration guide (476 lines)
+  - Detailed setup for Ollama, Anthropic, OpenAI
+  - Step-by-step installation instructions
+  - Model recommendations for Japanese
+  - Cost comparison tables
+  - Troubleshooting section
+  - FAQ for common questions
+
+- **docs/maintenance/LESSONS_LEARNED.md**: Knowledge database (comprehensive)
+  - Mistakes and gotchas to avoid repeating
+  - Design decisions with reasoning
+  - Pattern library for common problems
+  - Organized by topic (config, LLM, docs, testing, code, Japanese, pipeline)
+
+- **config.local.json.example**: Enhanced with LLM provider examples
+  - Nested structure examples for all three providers
+  - Stage-specific override examples (commented out)
+  - Hybrid setup example (Ollama + Anthropic)
+  - Inline comments explaining each option
+  - Direct reference to LLM_PROVIDERS.md
+
+- **docs/AI_GUIDE.md updates**
+  - Added knowledge database section (+120 lines)
+  - Instructions for creating new knowledge documents
+  - Document structure template
+  - AI-discoverability best practices
+  - How to use LESSONS_LEARNED.md effectively
+  - Relationship between AI_GUIDE, LESSONS_LEARNED, SESSIONS, CHANGELOG
+
+### Changed
+- **config.json**: LLM config reorganized with provider-specific sub-configs
+  - Old: Flat structure with mixed provider settings
+  - New: Nested structure: `llm.ollama`, `llm.anthropic`, `llm.openai`
+  - Default provider: `anthropic` → `ollama`
+  - Default model: `claude-sonnet-4-5-20250929` → `llama3.2:3b`
+  - Backward compatible: Checks both old and new config locations
+
+- **shared/llm_utils.py**: Provider classes updated for nested config
+  - AnthropicProvider: Reads from `llm.anthropic.*` (with fallback)
+  - OllamaProvider: Reads from `llm.ollama.*` (with fallback)
+  - OpenAIProvider: Reads from `llm.openai.*` (with fallback)
+  - Stage-specific override VERIFIED working
+
+- **docs/core/CONFIGURATION.md**: Updated to reflect nested structure
+  - Updated all LLM examples to use nested config
+  - Added detailed provider sub-sections
+  - Improved cross-reference to LLM_PROVIDERS.md
+
+### Impact
+**Cost savings:** Users can now use FREE local Ollama models for simple tasks (segment splitting) and reserve paid Claude API for quality-critical tasks (text polishing). Potential savings: ~$0.25-1.00 per hour of transcription.
+
+**Flexibility:** Users can choose their preferred LLM provider based on cost, quality, and privacy requirements. Nested config structure makes provider settings clearer and easier to manage.
+
+**Knowledge base:** New LESSONS_LEARNED.md prevents repeating mistakes. LLM_PROVIDERS.md serves as comprehensive LLM reference. AI_GUIDE updated with knowledge database usage instructions. Documentation reorganized into proper folders (core/, features/, maintenance/).
+
+**Files changed:**
+- `shared/llm_utils.py` (new, 203 lines with nested config support)
+- `modules/stage4_segment_splitting/llm_splitter.py` (~30 lines simplified)
+- `modules/stage7_text_polishing/processor.py` (~25 lines simplified)
+- `config.json` (reorganized with nested structure)
+- `config.local.json.example` (enhanced with LLM examples)
+- `docs/features/LLM_PROVIDERS.md` (new, 476 lines comprehensive guide)
+- `docs/maintenance/LESSONS_LEARNED.md` (new, comprehensive knowledge database)
+- `docs/AI_GUIDE.md` (+120 lines knowledge base section, moved to docs root)
+- `docs/core/CONFIGURATION.md` (updated examples)
+- `docs/README.md` (updated with new structure)
+- `README.md` (updated references)
+- `tests/unit/modules/stage7_text_polishing/test_processor.py` (1 test updated)
+
+**Files removed:**
+- `config.llm_examples.json` (redundant with LLM_PROVIDERS.md)
+
+**Documentation structure:**
+```
+docs/
+├── AI_GUIDE.md          # AI assistant entry point (ROOT)
+├── features/
+│   └── LLM_PROVIDERS.md  # LLM configuration guide
+└── maintenance/
+    └── LESSONS_LEARNED.md # Knowledge database
+```
+
+**Test results:** 270/270 tests pass ✅
+
+---
+
 ## [2025-10-11 12:03]
 
 ### Added
@@ -258,6 +357,7 @@ and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
+| 2025-10-11 15:00 | Added   | Configurable LLM providers (Ollama, OpenAI)       | 261     |
 | 2025-10-11 12:03 | Added   | config.local.json support with deep merge         | 261     |
 | 2025-10-11 11:58 | Changed | Streamlined README.md for user focus              | 261     |
 | 2025-10-11 11:56 | Added   | docs/features/ folder for stage documentation     | 261     |

@@ -14,13 +14,20 @@ This document provides AI-specific context for working on transcribe-jp. It focu
 
 **Read these first:**
 1. [README.md](../README.md) - Project overview, installation, usage
-2. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
-3. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
-4. **This guide** - AI-specific guidelines and lessons learned
+2. [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - **START HERE!** Knowledge database of mistakes to avoid
+3. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
+4. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
+5. **This guide** - AI-specific guidelines and workflows
+
+**Key Knowledge Base Documents (docs/ folder):**
+- [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - Mistakes, gotchas, and design decisions
+- [features/LLM_PROVIDERS.md](features/LLM_PROVIDERS.md) - Comprehensive LLM provider configuration guide
+- [core/CONFIGURATION.md](core/CONFIGURATION.md) - Full configuration reference
+- [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Detailed stage documentation
 
 **Key facts:**
 - 9-stage Japanese transcription pipeline (Whisper → processing → VTT output)
-- 261 unit tests + 4 E2E tests (all must pass before committing)
+- 270 unit tests + 4 E2E tests (all must pass before committing)
 - Japanese-specific: particle variations, no spaces, sentence structure
 - Stage order is critical: filtering before realignment, polishing after
 - Test command: `python -X utf8 -m pytest tests/unit/ -q --tb=line`
@@ -298,6 +305,7 @@ git log --oneline -10
 
 **Documentation:**
 - [README.md](../README.md) - User guide
+- [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - Knowledge database
 - [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - System design
 - [core/CONFIGURATION.md](core/CONFIGURATION.md) - Config reference
 - [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Stage details
@@ -305,15 +313,34 @@ git log --oneline -10
 
 ---
 
-## Session History & Lessons Learned
+## Using the Knowledge Database
 
-**Session history has moved to [SESSIONS.md](SESSIONS.md)** where it benefits both humans and AI assistants.
+### LESSONS_LEARNED.md - Your First Stop
 
-**Why the move:**
-- Humans can understand the development process
-- AI assistants can learn from past patterns
-- Located in docs/ with other project documentation
-- More accessible to all team members
+**[LESSONS_LEARNED.md](LESSONS_LEARNED.md)** is a curated knowledge database of:
+- **Mistakes to avoid** - Learn from past errors
+- **Design decisions** - Understand why things are the way they are
+- **Gotchas and patterns** - Non-obvious issues and solutions
+- **Best practices** - Proven patterns for common tasks
+
+**Always read LESSONS_LEARNED.md** before making architectural changes. It contains context that isn't obvious from code.
+
+**When to add to LESSONS_LEARNED.md:**
+1. You made a mistake worth documenting
+2. You discovered a non-obvious issue
+3. You made a design decision with reasoning
+4. You solved a tricky problem
+5. You refactored and want to explain why
+
+**Format:** See [LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md#how-to-update-this-document) for template.
+
+### SESSIONS.md - Development History
+
+**[SESSIONS.md](SESSIONS.md)** tracks session-by-session development:
+- What was accomplished
+- Why decisions were made
+- Lessons learned
+- Context for future work
 
 **When to update SESSIONS.md:**
 - After completing significant work
@@ -323,15 +350,152 @@ git log --oneline -10
 
 **Template available in SESSIONS.md** - Copy it when you complete work.
 
+### Relationship Between Docs
+
+```
+LESSONS_LEARNED.md → Curated knowledge (mistakes, patterns, decisions)
+SESSIONS.md        → Chronological history (what happened, when, why)
+AI_GUIDE.md        → Quick reference (guidelines, workflows, tips)
+CHANGELOG.md       → User-facing changes (what changed, impact)
+```
+
+**Use LESSONS_LEARNED.md** to prevent mistakes.
+**Use SESSIONS.md** to understand project evolution.
+**Use AI_GUIDE.md** for day-to-day development.
+**Use CHANGELOG.md** to see what changed recently.
+
+---
+
+## Adding New Knowledge Base Documents
+
+**When to create new knowledge documents in `docs/`:**
+
+### ✅ Create New Document When:
+1. **Topic is self-contained** - Can be understood independently
+2. **Topic is substantial** - More than 100 lines of content
+3. **Topic benefits multiple stakeholders** - Useful for users, developers, and AI assistants
+4. **Topic needs detailed examples** - Step-by-step guides, troubleshooting, FAQs
+5. **Topic is frequently referenced** - Will be linked from multiple places
+
+**Examples:**
+- `features/LLM_PROVIDERS.md` - Self-contained LLM configuration guide (users need it, AI assistants reference it)
+- `maintenance/LESSONS_LEARNED.md` - Knowledge database of mistakes and design decisions
+- `SESSIONS.md` - Development history and lessons learned (in docs root)
+- `core/ARCHITECTURE.md` - System design and pipeline overview
+
+### ❌ Don't Create New Document When:
+1. **Topic fits existing document** - Add to CONFIGURATION.md, AI_GUIDE.md, etc.
+2. **Topic is too small** - Less than 50 lines (add to existing doc)
+3. **Topic is code-specific** - Add comments in code or docstrings
+4. **Topic is temporary** - Add to CHANGELOG.md instead
+
+### Organize Docs into Proper Folders
+
+**Important:** Don't put all docs in `docs/` root. Use folders:
+- `docs/core/` - Core system docs (ARCHITECTURE, CONFIGURATION, PIPELINE_STAGES)
+- `docs/features/` - Feature-specific docs (LLM_PROVIDERS, stage guides)
+- `docs/maintenance/` - Maintenance docs (AI_GUIDE, LESSONS_LEARNED, historical records)
+
+### Document Structure Template
+
+```markdown
+# Document Title
+
+**Quick Reference:** One-line summary of what this document covers
+
+**Last Updated:** YYYY-MM-DD
+**Related:** Links to related documents
+
+---
+
+## Overview
+
+Brief introduction (2-3 paragraphs)
+
+---
+
+## Quick Start
+
+Most common use case with minimal steps
+
+---
+
+## Detailed Sections
+
+In-depth coverage with examples
+
+---
+
+## Troubleshooting
+
+Common issues and solutions
+
+---
+
+## FAQ
+
+Frequently asked questions
+
+---
+
+## See Also
+
+- Links to related documents
+- External resources
+```
+
+### How to Make Documents AI-Discoverable
+
+**1. Add to AI_GUIDE.md Quick Start:**
+```markdown
+**Key Knowledge Base Documents (docs/ folder):**
+- [YOUR_DOC.md](YOUR_DOC.md) - Brief description
+```
+
+**2. Add cross-references:**
+- Link from related documents (CONFIGURATION.md, README.md, etc.)
+- Use consistent naming: `[Document Name](path/to/doc.md)`
+
+**3. Use clear headers:**
+- AI assistants scan headers to understand content
+- Use action-oriented titles: "How to Configure", "Troubleshooting Guide"
+- Include keywords: "LLM", "Configuration", "Pipeline", "Testing"
+
+**4. Add metadata at top:**
+```markdown
+**Last Updated:** YYYY-MM-DD
+**Related:** [Related Doc 1](path), [Related Doc 2](path)
+```
+
+**5. Include Quick Reference:**
+- One-line summary at the top
+- AI assistants read this first to decide if document is relevant
+
+### Knowledge Base Best Practices
+
+1. **One topic per document** - Don't mix unrelated topics
+2. **Start with examples** - Show, don't just tell
+3. **Use tables for comparisons** - Easy to scan
+4. **Include troubleshooting** - Common issues save time
+5. **Link bidirectionally** - If A links to B, B should link back to A
+6. **Update "Last Updated"** - Helps AI assistants assess freshness
+7. **Keep it concise** - Break long docs into sub-documents
+
 ---
 
 ## How to Update This Guide
 
 **Update AI_GUIDE.md when:**
-- You discover new AI-specific patterns
-- You find common mistakes to avoid
-- You solve tricky issues (add to Troubleshooting)
-- You modify configuration behavior (update guidelines)
+- You discover new AI-specific patterns or workflows
+- You need to add critical guidelines
+- **You create new knowledge base documents** (add to Quick Start list)
+
+**Update LESSONS_LEARNED.md when:**
+- You make a mistake (document so others don't repeat it)
+- You discover a gotcha or non-obvious issue
+- You make a design decision (explain the reasoning)
+- You solve a tricky problem (share the solution pattern)
+- You refactor something (document why the new way is better)
 
 **Update SESSIONS.md when:**
 - You complete significant work

@@ -48,8 +48,8 @@ class TestPolishSegmentsWithLLM:
         assert result == segments
 
         captured = capsys.readouterr()
-        assert 'Warning: API key not found' in captured.out
-        assert 'skipping polishing' in captured.out
+        assert 'Warning: Failed to initialize anthropic provider' in captured.out
+        assert 'API key not found' in captured.out
 
     @patch('anthropic.Anthropic')
     def test_batch_processing(self, mock_anthropic_class, sample_config):

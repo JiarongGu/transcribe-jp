@@ -42,6 +42,10 @@ This project uses a **two-audience documentation system**:
   - Testing requirements
   - Common tasks and troubleshooting
   - Written for AI assistants but applicable to all developers
+- **[maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md)** - Knowledge database
+  - Mistakes and gotchas to avoid
+  - Design decisions and reasoning
+  - Pattern library for common problems
 
 ### Feature Documentation
 
@@ -50,6 +54,10 @@ This project uses a **two-audience documentation system**:
   - Configuration examples
   - Usage patterns and troubleshooting
   - See [features/README.md](features/README.md) for complete index
+- **[features/LLM_PROVIDERS.md](features/LLM_PROVIDERS.md)** - LLM provider configuration
+  - Setup guides for Ollama, Anthropic, OpenAI
+  - Model recommendations for Japanese
+  - Cost comparison and troubleshooting
 
 ### Change Tracking
 
@@ -70,10 +78,11 @@ This project uses a **two-audience documentation system**:
 ### For Contributing Code
 
 1. Read [AI_GUIDE.md](AI_GUIDE.md) first - contains critical guidelines and common mistakes
-2. Review [CHANGELOG.md](CHANGELOG.md) to understand recent changes
-3. Read [core/ARCHITECTURE.md](core/ARCHITECTURE.md) for technical details
-4. Run tests: `python -X utf8 -m pytest tests/unit/ -q --tb=line` (all 261 must pass)
-5. Update documentation and commit changes
+2. Review [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) to avoid known pitfalls
+3. Check [CHANGELOG.md](CHANGELOG.md) to understand recent changes
+4. Read [core/ARCHITECTURE.md](core/ARCHITECTURE.md) for technical details
+5. Run tests: `python -X utf8 -m pytest tests/unit/ -q --tb=line` (all 270 must pass)
+6. Update documentation and commit changes
 
 ### For Configuring the Pipeline
 
@@ -100,20 +109,22 @@ transcribe-jp/
 │
 ├── docs/                        # Documentation hub
 │   ├── README.md                # This file - Documentation hub
-│   ├── AI_GUIDE.md              # AI assistant quick reference
+│   ├── AI_GUIDE.md              # AI assistant quick reference (ROOT for easy discovery)
 │   ├── CHANGELOG.md             # Change history
 │   ├── SESSIONS.md              # Development session history
 │   ├── core/                    # Core project documentation
 │   │   ├── ARCHITECTURE.md      # System design and pipeline flow
 │   │   ├── CONFIGURATION.md     # Complete config reference
 │   │   └── PIPELINE_STAGES.md   # Detailed stage breakdown
-│   ├── features/                # Individual stage documentation
+│   ├── features/                # Feature-specific documentation
 │   │   ├── README.md            # Features index
+│   │   ├── LLM_PROVIDERS.md     # LLM configuration guide
 │   │   ├── STAGE4_SEGMENT_SPLITTING.md
 │   │   ├── STAGE5_HALLUCINATION_FILTERING.md
 │   │   ├── STAGE6_TIMING_REALIGNMENT.md
 │   │   └── ... (9 stages)
-│   └── maintenance/             # Historical technical records
+│   └── maintenance/             # Maintenance and historical documentation
+│       ├── LESSONS_LEARNED.md   # Knowledge database
 │       └── TIMING_REALIGNMENT_IMPROVEMENTS_2025-10-10.md
 │
 ├── tests/                       # Test suite
@@ -173,6 +184,7 @@ transcribe-jp/
 - **core/PIPELINE_STAGES.md** - When modifying stage behavior
 - **features/STAGEX_*.md** - When modifying specific stage implementation or behavior
 - **AI_GUIDE.md** - When discovering new patterns or lessons learned
+- **maintenance/LESSONS_LEARNED.md** - When making mistakes or design decisions worth documenting
 - **CHANGELOG.md** - For ALL significant changes (required)
 - **SESSIONS.md** - When completing significant work or making key decisions
 
@@ -207,7 +219,7 @@ transcribe-jp/
 - **Follow links** between documents - they're there to help you navigate
 - **Update as you go** - If you find documentation outdated, update it
 - **Ask questions** - If documentation is unclear, improve it for the next developer
-- **Run tests before committing** - All 261 unit tests must pass
+- **Run tests before committing** - All 270 unit tests must pass
 
 ---
 

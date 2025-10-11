@@ -101,10 +101,23 @@
     }
   },
   "llm": {
-    "provider": "anthropic",
-    "anthropic_api_key": "<your-anthropic-api-key-here>",
-    "model": "claude-sonnet-4-5-20250929",
+    "provider": "ollama",
     "max_tokens": 1024,
-    "temperature": 0.0
+    "temperature": 0.0,
+    "ollama": {
+      "base_url": "http://localhost:11434",
+      "model": "llama3.2:3b",
+      "timeout": 30
+    },
+    "anthropic": {
+      "api_key": "<your-anthropic-api-key-here>",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "model": "claude-3-5-haiku-20241022"
+    },
+    "openai": {
+      "api_key": "<your-openai-api-key-here>",
+      "api_key_env": "OPENAI_API_KEY",
+      "model": "gpt-4o-mini"
+    }
   }
 }
