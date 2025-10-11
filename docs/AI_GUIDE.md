@@ -44,39 +44,45 @@ This document provides AI-specific context for working on transcribe-jp. It focu
    ```
    All 261 tests must pass. No exceptions.
 
-2. **ALWAYS suggest git commit after completing tasks**
+2. **ALWAYS update CHANGELOG.md BEFORE committing**
+   - User explicitly requested this for ALL commits
+   - Add entry with Date + Time format: [2025-10-12 05:30]
+   - Include: What changed, impact, files modified, test results
+   - Update Version History Summary table at bottom
+   - See "Git Commit Workflow" section below for full process
+
+3. **ALWAYS suggest git commit after completing tasks**
    - Ask: "Should I commit these changes to git?"
    - User explicitly requested this behavior
    - Create descriptive commits with test results
    - Use co-authorship footer (see git commit template below)
-   - Update CHANGELOG.md with Date + Time format (e.g., [2025-01-11 14:30]) instead of git hash
 
-3. **Update documentation for ALL significant changes**
-   - **CHANGELOG.md** - What changed, when, impact (REQUIRED)
+4. **Update documentation for ALL significant changes**
+   - **CHANGELOG.md** - What changed, when, impact (REQUIRED - see #2)
    - **SESSIONS.md** - Why, lessons learned, context
    - **../README.md** - User-facing features/changes
    - **core/CONFIGURATION.md** - Config option changes
    - **core/PIPELINE_STAGES.md** - Stage behavior changes
 
-4. **Update THIS document (AI_GUIDE.md) when you learn something**
+5. **Update THIS document (AI_GUIDE.md) when you learn something**
    - Add new patterns to guidelines
    - Document mistakes in "DO NOT" section
    - Add troubleshooting for tricky issues
    - Update Session History (see template below)
 
-5. **Check for redundancy before adding features**
+6. **Check for redundancy before adding features**
    - **Stage 5** = Hallucination filtering (phrase_filter, timing_validation)
    - **Stage 6** = Timing realignment (re-transcription)
    - **Stage 8** = Final cleanup (stammers, duplicates)
    - Search codebase first: `grep -r "feature_name"`
 
-6. **Follow Japanese text conventions**
+7. **Follow Japanese text conventions**
    - No spaces between segments
    - Particle variations: は/わ, を/お, へ/え (use 0.75 similarity threshold)
    - Sentence enders: 。？！ね よ わ な か
    - Incomplete markers: て で と が けど
 
-7. **Use centralized utilities (don't reimplement)**
+8. **Use centralized utilities (don't reimplement)**
    - `shared/text_utils.py` - Text normalization, Japanese utils
    - `shared/whisper_utils.py` - Audio loading, transcription
    - `modules/stage6_timing_realignment/utils.py` - Re-transcription, similarity
@@ -175,7 +181,17 @@ See [core/CONFIGURATION.md](core/CONFIGURATION.md) for full reference. AI assist
 3. Update tests: `tests/e2e/test_timing_realignment.py`
 4. Document threshold changes in CHANGELOG.md
 
-### Git Commit Template
+### Git Commit Workflow
+
+**IMPORTANT:** Follow this workflow for ALL commits:
+
+1. **Complete the work** (code + tests)
+2. **Run all tests** (`python -m pytest tests/ -v -q --tb=line`)
+3. **Update CHANGELOG.md** (add entry with Date + Time format)
+4. **Stage all changes** (`git add -A`)
+5. **Commit with descriptive message** (use template below)
+
+**Git Commit Template:**
 
 ```bash
 git commit -m "Brief summary line
@@ -189,12 +205,14 @@ Files changed:
 - file1.py - description
 - file2.py - description
 
-Test results: 261/261 tests pass ✅
+Test results: 275/275 tests pass ✅
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
+
+**Common Mistake:** Forgetting to update CHANGELOG.md before committing. The user specifically requested CHANGELOG updates for ALL commits.
 
 ---
 

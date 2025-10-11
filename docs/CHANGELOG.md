@@ -7,6 +7,127 @@ and this project uses Date + Time format (YYYY-MM-DD HH:MM) for version tracking
 
 ---
 
+## [2025-10-12 05:30]
+
+### Added
+- **Automatic Ollama installation and management**
+  - ZERO setup required - Ollama is automatically installed and managed
+  - Auto-detects platform (Windows/Linux/macOS) and installs Ollama if not present
+  - Starts Ollama server as subprocess (runs in background, no terminal window)
+  - Automatically pulls required model (~2GB for llama3.2:3b)
+  - Proper lifecycle management (start/stop/cleanup)
+  - File: `shared/ollama_manager.py` (new, 395 lines)
+
+**What users see:**
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "ollama": {
+      "model": "llama3.2:3b"
+    }
+  }
+}
+```
+
+**What happens automatically:**
+1. ✅ Checks if Ollama is installed (installs if not)
+2. ✅ Starts Ollama server as subprocess
+3. ✅ Downloads model llama3.2:3b (~2GB)
+4. ✅ Ready to use!
+
+### Changed
+- **shared/llm_utils.py**: OllamaProvider now supports auto-managed mode
+  - Without `base_url`: Automatically installs and manages Ollama subprocess
+  - With `base_url`: Uses external Ollama server (backward compatible)
+  - Automatic cleanup on provider destruction
+  - Lines: 56-122 (OllamaProvider class updated)
+
+- **config.json**: Removed `base_url` from ollama config (now optional)
+  - Old: `ollama.base_url` required
+  - New: `base_url` optional, auto-managed if omitted
+
+- **config.local.json.example**: Updated to show auto-managed Ollama
+  - `base_url` now commented out as optional
+  - Clearer inline comments about auto-management
+
+- **docs/features/LLM_PROVIDERS.md**: Comprehensive auto-management documentation
+  - Updated Quick Start section (zero setup required)
+  - Updated Ollama setup section (automatic vs manual)
+  - Updated troubleshooting for auto-installation issues
+  - Updated FAQ with auto-management questions
+
+### Impact
+**Zero setup UX:** Users no longer need to manually install Ollama, start the server, or pull models. The system handles everything automatically.
+
+**Simplified config:** No need to specify `base_url` - just choose a model and go.
+
+**Better onboarding:** New users can use FREE local LLMs without understanding Ollama installation.
+
+**Cross-platform:** Automatic installation works on Windows, Linux, and macOS.
+
+**Files changed:**
+- `shared/ollama_manager.py` (new, 395 lines - complete management system)
+- `shared/llm_utils.py` (updated OllamaProvider for auto-management)
+- `config.json` (removed base_url from ollama config)
+- `config.local.json.example` (updated examples)
+- `docs/features/LLM_PROVIDERS.md` (updated documentation)
+
+**Test results:** 275/275 tests pass ✅
+
+---
+
+## [2025-10-12 05:18]
+
+### Changed
+- **Simplified stage-specific LLM override**
+  - Removed complex `llm_config` nested configuration
+  - Now only need `llm_provider` to override provider per stage
+  - All settings come from global `llm.{provider}` section (single source of truth)
+
+**Before (complex):**
+```json
+{
+  "text_polishing": {
+    "llm_provider": "anthropic",
+    "llm_config": {
+      "anthropic": {
+        "api_key": "...",
+        "model": "..."
+      }
+    }
+  }
+}
+```
+
+**After (simple):**
+```json
+{
+  "text_polishing": {
+    "llm_provider": "anthropic"
+  }
+}
+```
+
+### Impact
+**Simpler config:** Just one setting to override provider per stage.
+
+**Less duplication:** No need to repeat api_key, model, etc. per stage.
+
+**Single source of truth:** All provider settings in `llm.{provider}` section.
+
+**Easier maintenance:** Change model once, applies everywhere.
+
+**Files changed:**
+- `shared/llm_utils.py` (simplified stage override logic)
+- `config.local.json.example` (cleaner examples with inline comments)
+- `docs/features/LLM_PROVIDERS.md` (updated all override examples)
+- `docs/core/CONFIGURATION.md` (updated override example)
+
+**Test results:** 275/275 tests pass ✅
+
+---
+
 ## [2025-10-11 15:00]
 
 ### Added
@@ -357,7 +478,9 @@ docs/
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
-| 2025-10-11 15:00 | Added   | Configurable LLM providers (Ollama, OpenAI)       | 261     |
+| 2025-10-12 05:30 | Added   | Automatic Ollama installation and management      | 275     |
+| 2025-10-12 05:18 | Changed | Simplified stage-specific LLM override            | 275     |
+| 2025-10-11 15:00 | Added   | Configurable LLM providers (Ollama, OpenAI)       | 270     |
 | 2025-10-11 12:03 | Added   | config.local.json support with deep merge         | 261     |
 | 2025-10-11 11:58 | Changed | Streamlined README.md for user focus              | 261     |
 | 2025-10-11 11:56 | Added   | docs/features/ folder for stage documentation     | 261     |

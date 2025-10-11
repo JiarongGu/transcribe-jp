@@ -2,8 +2,8 @@
 
 **Quick Reference:** Mistakes, gotchas, and design decisions to prevent future issues. Read this before making architectural changes.
 
-**Last Updated:** 2025-10-11
-**Related:** [AI_GUIDE.md](AI_GUIDE.md), [SESSIONS.md](SESSIONS.md), [CHANGELOG.md](CHANGELOG.md)
+**Last Updated:** 2025-10-12
+**Related:** [AI_GUIDE.md](../AI_GUIDE.md), [SESSIONS.md](../SESSIONS.md), [CHANGELOG.md](../CHANGELOG.md)
 
 ---
 
@@ -97,37 +97,124 @@ model = config.get("ollama", {}).get("model") or config.get("model", "default")
 
 ---
 
-### ✅ Lesson: Stage-Specific Overrides Need Clear Naming
+### ✅ Lesson: Stage-Specific Overrides Should Be Simple
 
-**Date:** 2025-10-11
-**Context:** Implementing stage-specific LLM provider override
+**Date:** 2025-10-12 (updated from 2025-10-11)
+**Context:** Implementing and simplifying stage-specific LLM provider override
 
-**Mistake:** Unclear whether stage overrides work and how to use them.
-
-**Solution:** Document and test stage-specific override pattern:
+**Mistake (v1):** Initially created complex nested `llm_config` for stage overrides:
 ```json
 {
-  "llm": {
-    "provider": "ollama"  // Global default
-  },
   "text_polishing": {
-    "enable": true,
-    "llm_provider": "anthropic",  // Override for this stage
+    "llm_provider": "anthropic",
     "llm_config": {
       "anthropic": {
-        "api_key": "..."
+        "api_key": "...",
+        "model": "..."
       }
     }
   }
 }
 ```
 
+**Problems:**
+- Too complex - need to repeat provider settings
+- Duplication - api_key, model specified twice (global + stage)
+- Hard to maintain - change model in two places
+- Not DRY - violates "single source of truth" principle
+
+**Solution (v2):** Simplified to just provider name override:
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "anthropic": {
+      "api_key": "...",
+      "model": "claude-3-5-haiku-20241022"
+    }
+  },
+  "text_polishing": {
+    "llm_provider": "anthropic"  // That's it! Uses global llm.anthropic settings
+  }
+}
+```
+
 **Pattern:**
 1. `{stage_name}.llm_provider` - Override provider for specific stage
-2. `{stage_name}.llm_config` - Merge with global `llm` config
-3. Global `llm` config provides defaults
+2. All settings come from global `llm.{provider}` section
+3. Single source of truth for each provider's configuration
 
-**Lesson:** Always verify complex config features work and document with examples.
+**Benefits:**
+- Much simpler config (one line to override)
+- No duplication of provider settings
+- Change model once, applies everywhere
+- Easier to understand and maintain
+
+**Implementation:** [shared/llm_utils.py:148-154](../../shared/llm_utils.py)
+
+**Lesson:** Keep config overrides simple. Just override the identifier (provider name), not all the settings.
+
+---
+
+### ✅ Lesson: Automate Complex Dependencies Instead of Manual Setup
+
+**Date:** 2025-10-12
+**Context:** Ollama installation and management
+
+**Problem:** Users had to manually:
+1. Download Ollama from website
+2. Install it
+3. Run `ollama serve`
+4. Run `ollama pull model`
+5. Keep terminal open
+6. Configure `base_url` in config
+
+This created a high barrier to entry for FREE local LLM usage.
+
+**Solution:** Automatic installation and subprocess management:
+- Detect if Ollama is installed (install if not)
+- Start Ollama as subprocess (no terminal window)
+- Pull model automatically (~2GB download)
+- Handle lifecycle (start/stop/cleanup)
+- Remove `base_url` from required config
+
+**New user experience:**
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "ollama": {
+      "model": "llama3.2:3b"
+    }
+  }
+}
+```
+
+System automatically handles everything!
+
+**Implementation:** [shared/ollama_manager.py](../../shared/ollama_manager.py) (395 lines)
+
+**Benefits:**
+- Zero setup required
+- Lower barrier to entry
+- Better onboarding experience
+- Users don't need to understand Ollama
+- Still supports external servers (backward compatible)
+
+**Lesson:** When a dependency has complex manual setup, consider automating it with subprocess management. Trade code complexity for user simplicity.
+
+**When to automate:**
+- ✅ Setup is complex (multiple steps)
+- ✅ Dependency is self-contained (Ollama runs standalone)
+- ✅ Can detect if already installed
+- ✅ Installation is scriptable per-platform
+- ✅ Subprocess management is straightforward
+
+**When NOT to automate:**
+- ❌ System-level dependencies (CUDA, ffmpeg) - too risky
+- ❌ Requires admin privileges
+- ❌ Installation varies too much per system
+- ❌ Would create security concerns
 
 ---
 
