@@ -13,9 +13,9 @@ This document provides AI-specific context for working on transcribe-jp. It focu
 ## Quick Start for AI Assistants
 
 **Read these first:**
-1. [README.md](README.md) - Project overview, installation, usage
-2. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - 9-stage pipeline, directory structure
-3. [docs/CHANGELOG.md](docs/CHANGELOG.md) - Recent changes and git history
+1. [README.md](../README.md) - Project overview, installation, usage
+2. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
+3. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
 4. **This guide** - AI-specific guidelines and lessons learned
 
 **Key facts:**
@@ -44,11 +44,11 @@ This document provides AI-specific context for working on transcribe-jp. It focu
    - Use co-authorship footer (see git commit template below)
 
 3. **Update documentation for ALL significant changes**
-   - **docs/CHANGELOG.md** - What changed, when, impact (REQUIRED)
-   - **AI_GUIDE.md Session History** - Why, lessons learned, context
-   - **README.md** - User-facing features/changes
-   - **docs/CONFIGURATION.md** - Config option changes
-   - **docs/PIPELINE_STAGES.md** - Stage behavior changes
+   - **CHANGELOG.md** - What changed, when, impact (REQUIRED)
+   - **SESSIONS.md** - Why, lessons learned, context
+   - **../README.md** - User-facing features/changes
+   - **core/CONFIGURATION.md** - Config option changes
+   - **core/PIPELINE_STAGES.md** - Stage behavior changes
 
 4. **Update THIS document (AI_GUIDE.md) when you learn something**
    - Add new patterns to guidelines
@@ -120,7 +120,7 @@ This document provides AI-specific context for working on transcribe-jp. It focu
 
 ## Key Configuration Settings
 
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for full reference. AI assistants should know these:
+See [core/CONFIGURATION.md](core/CONFIGURATION.md) for full reference. AI assistants should know these:
 
 **Similarity thresholds (0.75):**
 - `timing_realignment.text_search.similarity: 0.75`
@@ -150,7 +150,7 @@ See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for full reference. AI assist
 3. Import in: `modules/stageN_*/processor.py`
 4. Add config: `config.json`
 5. Write tests: `tests/unit/modules/stageN_*/`
-6. Update docs: `docs/CONFIGURATION.md`, `docs/CHANGELOG.md`
+6. Update docs: `core/CONFIGURATION.md`, `CHANGELOG.md`
 7. Run tests: All 261 must pass
 
 ### Modifying Text Similarity
@@ -260,7 +260,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 4. **Does this need configuration?**
    - Add to `config.json` with sensible defaults
-   - Document in `docs/CONFIGURATION.md`
+   - Document in `core/CONFIGURATION.md`
 
 5. **Is there test coverage?**
    - Add unit tests for new functions
@@ -295,17 +295,17 @@ git log --oneline -10
 - Japanese utils: `shared/text_utils.py`
 
 **Documentation:**
-- [README.md](README.md) - User guide
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design
-- [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Config reference
-- [docs/PIPELINE_STAGES.md](docs/PIPELINE_STAGES.md) - Stage details
-- [docs/CHANGELOG.md](docs/CHANGELOG.md) - Change history
+- [README.md](../README.md) - User guide
+- [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - System design
+- [core/CONFIGURATION.md](core/CONFIGURATION.md) - Config reference
+- [core/PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Stage details
+- [CHANGELOG.md](CHANGELOG.md) - Change history
 
 ---
 
 ## Session History & Lessons Learned
 
-**Session history has moved to [docs/SESSIONS.md](docs/SESSIONS.md)** where it benefits both humans and AI assistants.
+**Session history has moved to [SESSIONS.md](SESSIONS.md)** where it benefits both humans and AI assistants.
 
 **Why the move:**
 - Humans can understand the development process
@@ -313,13 +313,13 @@ git log --oneline -10
 - Located in docs/ with other project documentation
 - More accessible to all team members
 
-**When to update docs/SESSIONS.md:**
+**When to update SESSIONS.md:**
 - After completing significant work
 - When fixing important bugs
 - When making key decisions
 - When learning valuable patterns
 
-**Template available in docs/SESSIONS.md** - Copy it when you complete work.
+**Template available in SESSIONS.md** - Copy it when you complete work.
 
 ---
 
@@ -331,7 +331,7 @@ git log --oneline -10
 - You solve tricky issues (add to Troubleshooting)
 - You modify configuration behavior (update guidelines)
 
-**Update docs/SESSIONS.md when:**
+**Update SESSIONS.md when:**
 - You complete significant work
 - You want to document decisions/lessons
 - You fix bugs or make improvements
@@ -355,4 +355,4 @@ git log --oneline -10
 
 ---
 
-*This guide was created in session 2025-01-11. It is a living document maintained by AI assistants across sessions. Session history is now in [docs/SESSIONS.md](docs/SESSIONS.md).*
+*This guide was created in session 2025-01-11. It is a living document maintained by AI assistants across sessions. Session history is now in [SESSIONS.md](SESSIONS.md).*

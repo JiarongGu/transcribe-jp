@@ -127,7 +127,7 @@ python transcribe_jp.py --output-dir ./subtitles
 
 Configuration is managed through `config.json` with **1:1 mapping** between config sections and pipeline stages.
 
-**📖 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for complete reference**
+**📖 See [docs/core/CONFIGURATION.md](docs/core/CONFIGURATION.md) for complete reference**
 
 ### 🔐 API Key Security
 
@@ -379,9 +379,11 @@ Post-realignment cleanup filters (run after timing adjustments):
 
 ## 📚 Documentation
 
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design, pipeline flow, and module organization
-- **[CONFIGURATION.md](docs/CONFIGURATION.md)** - Complete configuration reference with all options
-- **[PIPELINE_STAGES.md](docs/PIPELINE_STAGES.md)** - Detailed breakdown of all 9 pipeline stages
+- **[Documentation Hub](docs/README.md)** - Complete documentation index
+- **[ARCHITECTURE.md](docs/core/ARCHITECTURE.md)** - System design, pipeline flow, and module organization
+- **[CONFIGURATION.md](docs/core/CONFIGURATION.md)** - Complete configuration reference with all options
+- **[PIPELINE_STAGES.md](docs/core/PIPELINE_STAGES.md)** - Detailed breakdown of all 9 pipeline stages
+- **[AI_GUIDE.md](docs/AI_GUIDE.md)** - Quick reference for AI assistants and developers
 
 ## 🏗️ Project Structure
 
@@ -555,7 +557,7 @@ To add a new feature:
 - Add filter to existing stage: Create file in `modules/stageN_name/`
 - Add new stage: Create `modules/stageN_name/` with `processor.py` and integrate in `core/pipeline.py`
 
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed design information.
+See [ARCHITECTURE.md](docs/core/ARCHITECTURE.md) for detailed design information.
 
 ## 📄 License
 
