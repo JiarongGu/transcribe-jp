@@ -105,7 +105,6 @@
     "max_tokens": 1024,
     "temperature": 0.0,
     "ollama": {
-      "base_url": "http://localhost:11434",
       "model": "llama3.2:3b",
       "timeout": 30
     },

@@ -8,12 +8,12 @@
   },
 
   "llm": {
-    // Choose provider: "ollama" (free, local), "anthropic" (paid, high quality), or "openai" (paid)
+    // Choose provider: "ollama" (free, local, auto-managed), "anthropic" (paid, high quality), or "openai" (paid)
     "provider": "anthropic",
 
     "ollama": {
-      "model": "llama3.2:3b",
-      "base_url": "http://localhost:11434"
+      "model": "llama3.2:3b"
+      // "base_url": "http://localhost:11434"  // Optional: Use external Ollama server
     },
 
     "anthropic": {

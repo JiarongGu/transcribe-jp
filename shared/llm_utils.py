@@ -54,7 +54,7 @@ class AnthropicProvider(LLMProvider):
 
 
 class OllamaProvider(LLMProvider):
-    """Ollama local model provider"""
+    """Ollama local model provider with automatic management"""
 
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
@@ -67,10 +67,28 @@ class OllamaProvider(LLMProvider):
         # Get provider-specific config
         ollama_config = config.get("ollama", {})
 
-        # Check both old and new locations for backward compatibility
-        self.base_url = ollama_config.get("base_url") or config.get("ollama_base_url", "http://localhost:11434")
+        # Model configuration
         self.model = ollama_config.get("model") or config.get("model", "llama3.2:3b")
         self.timeout = ollama_config.get("timeout") or config.get("timeout", 30)
+
+        # Auto-manage Ollama or use external URL
+        self.base_url = ollama_config.get("base_url")
+        self.manager = None
+
+        if not self.base_url:
+            # Auto-managed mode: Initialize Ollama manager
+            from shared.ollama_manager import get_ollama_manager
+
+            self.manager = get_ollama_manager(model=self.model)
+
+            # Initialize Ollama (install if needed, start server, pull model)
+            if not self.manager.initialize():
+                raise RuntimeError("Failed to initialize Ollama. Please install manually from https://ollama.com/download")
+
+            self.base_url = self.manager.base_url
+        else:
+            # External mode: Use provided base_url (backward compatible)
+            print(f"  - Using external Ollama server at {self.base_url}")
 
     def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 0.0) -> str:
         """Generate text using Ollama"""
@@ -93,6 +111,15 @@ class OllamaProvider(LLMProvider):
             return result.get("response", "").strip()
         except Exception as e:
             raise RuntimeError(f"Ollama API request failed: {e}")
+
+    def cleanup(self):
+        """Stop managed Ollama server if running"""
+        if self.manager:
+            self.manager.stop()
+
+    def __del__(self):
+        """Cleanup on object destruction"""
+        self.cleanup()
 
 
 class OpenAIProvider(LLMProvider):

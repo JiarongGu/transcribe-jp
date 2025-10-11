@@ -25,29 +25,29 @@ You can now choose from **three LLM providers**:
 
 ## Quick Start
 
-### Option 1: FREE Local (Ollama) - Recommended
+### Option 1: FREE Local (Ollama) - Recommended & AUTO-MANAGED
 
-```bash
-# 1. Install Ollama
-# Download from: https://ollama.com/download
-
-# 2. Pull a model
-ollama pull llama3.2:3b
-
-# 3. Update config.json
-```
+**Zero setup required!** Ollama is automatically installed and managed for you.
 
 ```json
 {
   "llm": {
     "provider": "ollama",
     "ollama": {
-      "base_url": "http://localhost:11434",
       "model": "llama3.2:3b"
     }
   }
 }
 ```
+
+**What happens automatically:**
+1. ✅ Checks if Ollama is installed (installs if not)
+2. ✅ Starts Ollama server as subprocess
+3. ✅ Downloads model `llama3.2:3b` (~2GB)
+4. ✅ Ready to use!
+
+**Manual installation (optional):**
+If auto-install fails, install manually: https://ollama.com/download
 
 ### Option 2: Cloud API (Anthropic)
 
@@ -93,24 +93,48 @@ Use FREE Ollama for splitting, paid Claude for polishing:
 
 ## Detailed Provider Configuration
 
-### Ollama (Local, FREE)
+### Ollama (Local, FREE, AUTO-MANAGED)
 
 **Benefits:**
 - ✅ Completely FREE
+- ✅ **Automatically installed and managed**
 - ✅ Private (no data leaves your machine)
 - ✅ Fast for local processing
-- ✅ No internet required
+- ✅ No internet required (after model download)
 
 **Requirements:**
-- GPU or CPU (2-4GB RAM recommended)
-- Ollama installed locally
+- GPU or CPU (2-4GB RAM recommended for llama3.2:3b)
+- Internet (for initial model download only)
 
-**Setup:**
+**Setup - AUTOMATIC:**
+
+Just configure the model you want, the system handles everything:
+
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "ollama": {
+      "model": "llama3.2:3b"
+    }
+  }
+}
+```
+
+**What happens automatically:**
+1. Checks if Ollama is installed
+2. If not: Downloads and installs Ollama for your platform
+3. Starts Ollama server as subprocess
+4. Pulls the specified model (if not already downloaded)
+5. Ready to use!
+
+**Setup - MANUAL (optional):**
+
+If you prefer manual control or already have Ollama running:
 
 1. **Install Ollama:**
-   - Download: https://ollama.com/download
-   - Windows: Runs as Windows service (automatic)
-   - Mac: Runs in menu bar (automatic)
+   - Windows: https://ollama.com/download
+   - macOS: `brew install ollama`
    - Linux: `curl -fsSL https://ollama.com/install.sh | sh`
 
 2. **Pull a model:**
@@ -118,17 +142,19 @@ Use FREE Ollama for splitting, paid Claude for polishing:
    ollama pull llama3.2:3b
    ```
 
-3. **Configure:**
+3. **Start Ollama:**
+   ```bash
+   ollama serve
+   ```
+
+4. **Configure with external URL:**
    ```json
    {
      "llm": {
        "provider": "ollama",
-       "max_tokens": 1024,
-       "temperature": 0.0,
        "ollama": {
-         "base_url": "http://localhost:11434",
-         "model": "llama3.2:3b",
-         "timeout": 30
+         "base_url": "http://localhost:11434",  // Use external Ollama server
+         "model": "llama3.2:3b"
        }
      }
    }
@@ -148,12 +174,14 @@ Use FREE Ollama for splitting, paid Claude for polishing:
 ```json
 {
   "ollama": {
-    "base_url": "http://localhost:11434",  // Ollama server URL
-    "model": "llama3.2:3b",                // Model name
-    "timeout": 30                           // Request timeout (seconds)
+    "model": "llama3.2:3b",                           // Model name (required)
+    "timeout": 30,                                    // Request timeout (seconds)
+    "base_url": "http://localhost:11434"             // Optional: Use external Ollama server
   }
 }
 ```
+
+**Note:** `base_url` is optional. If omitted, Ollama is automatically managed as a subprocess.
 
 ---
 
@@ -327,8 +355,7 @@ Approximate costs for processing **1 hour of audio transcription**:
     "temperature": 0.0,                    // Randomness (0=deterministic)
 
     "ollama": {
-      "base_url": "http://localhost:11434",
-      "model": "llama3.2:3b",
+      "model": "llama3.2:3b",              // Auto-managed (no base_url needed)
       "timeout": 30
     },
 
@@ -368,33 +395,48 @@ Approximate costs for processing **1 hour of audio transcription**:
 
 ## Troubleshooting
 
-### Ollama: "Connection refused"
+### Ollama: Auto-installation failed
 
-**Problem:** Cannot connect to Ollama server
+**Problem:** Automatic Ollama installation failed
+
+**Solution:**
+1. Check the error message in console
+2. Install manually: https://ollama.com/download
+3. After installation, the system will detect and use it automatically
+
+**Alternative:** Use external Ollama server by specifying `base_url`:
+```json
+{
+  "ollama": {
+    "base_url": "http://localhost:11434",
+    "model": "llama3.2:3b"
+  }
+}
+```
+
+### Ollama: Model download slow
+
+**Problem:** Model download taking too long
+
+**Solution:**
+- First download is ~2GB for llama3.2:3b
+- Use smaller model: `gemma2:2b` (1.6GB)
+- Check internet connection
+- Download manually: `ollama pull llama3.2:3b`
+
+### Ollama: "Connection refused" (manual mode)
+
+**Problem:** Cannot connect to external Ollama server
 
 **Solution:**
 ```bash
 # Check if Ollama is running
 ollama list
 
-# Start Ollama (Linux)
-systemctl start ollama
+# Start Ollama manually
+ollama serve
 
-# Reinstall if needed
-# https://ollama.com/download
-```
-
-### Ollama: "Model not found"
-
-**Problem:** Model not pulled
-
-**Solution:**
-```bash
-# Pull the model
-ollama pull llama3.2:3b
-
-# Verify it's available
-ollama list
+# Or remove base_url to use auto-managed mode
 ```
 
 ### Anthropic: "API key not found"
@@ -440,7 +482,16 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ## FAQ
 
 **Q: Which provider should I use?**
-A: Start with **Ollama** (free). Upgrade to Anthropic Claude if quality matters.
+A: Start with **Ollama** (free, auto-managed). Upgrade to Anthropic Claude if quality matters.
+
+**Q: Do I need to install Ollama manually?**
+A: No! Ollama is automatically installed and managed. Just specify the model in config.
+
+**Q: What happens on first run with Ollama?**
+A: The system automatically: (1) Installs Ollama if needed, (2) Starts server, (3) Downloads model (~2GB for llama3.2:3b).
+
+**Q: Can I use my existing Ollama installation?**
+A: Yes! If Ollama is already installed, the system detects and uses it. Or specify `base_url` to use external server.
 
 **Q: Can I use different providers for different stages?**
 A: Yes! Use stage-specific override. See "Stage-Specific Provider Override" above.
