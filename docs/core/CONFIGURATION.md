@@ -4,7 +4,41 @@ This document provides a complete reference for all configuration options in `co
 
 ## Overview
 
-The configuration file uses a **1:1 mapping** between config sections and pipeline stages:
+The configuration file uses a **1:1 mapping** between config sections and pipeline stages.
+
+### Configuration Files
+
+The system supports multiple configuration sources with priority order:
+
+1. **`config.json`** - Base configuration (committed to git)
+2. **`config.local.json`** - Local overrides (gitignored, optional)
+3. **`ANTHROPIC_API_KEY`** - Environment variable (highest priority)
+
+**Deep merge:** `config.local.json` is deep-merged with `config.json`, meaning you only need to specify the values you want to override.
+
+**Example:**
+```bash
+# config.json has:
+{"llm": {"provider": "anthropic", "model": "claude-3"}}
+
+# config.local.json only overrides API key:
+{"llm": {"anthropic_api_key": "sk-ant-..."}}
+
+# Result: Both are merged, provider and model preserved
+{"llm": {"provider": "anthropic", "model": "claude-3", "anthropic_api_key": "sk-ant-..."}}
+```
+
+### Quick Setup
+
+1. Copy example file: `cp config.local.json.example config.local.json`
+2. Edit `config.local.json` with your settings
+3. Only include settings you want to override
+
+**✅ Safe:** `config.local.json` is gitignored and won't be committed
+
+---
+
+## Stage Configuration
 
 | Config Section | Pipeline Stage | Purpose |
 |----------------|----------------|---------|

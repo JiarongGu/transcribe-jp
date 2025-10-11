@@ -1,0 +1,26 @@
+{
+  "_comment": "This is an example config.local.json file for local overrides",
+  "_comment2": "Copy this to config.local.json and customize (it's gitignored)",
+  "_comment3": "Only include settings you want to override from config.json",
+
+  "whisper": {
+    "device": "cuda"
+  },
+
+  "llm": {
+    "anthropic_api_key": "your-actual-api-key-here"
+  },
+
+  "segment_splitting": {
+    "enable_llm": true
+  },
+
+  "text_polishing": {
+    "enable": true
+  },
+
+  "timing_realignment": {
+    "enable": true,
+    "method": "time_based"
+  }
+}
