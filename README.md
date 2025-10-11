@@ -129,6 +129,27 @@ Configuration is managed through `config.json` with **1:1 mapping** between conf
 
 **📖 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for complete reference**
 
+### 🔐 API Key Security
+
+**IMPORTANT:** Never commit your actual API key to version control.
+
+**Option 1: Environment Variable (Recommended)**
+```bash
+export ANTHROPIC_API_KEY="your-actual-api-key"
+```
+
+**Option 2: Local Config File**
+Create `config.local.json` (gitignored) with your API key:
+```json
+{
+  "llm": {
+    "anthropic_api_key": "your-actual-api-key"
+  }
+}
+```
+
+The default `config.json` contains placeholder `<your-anthropic-api-key-here>` for safety.
+
 ### Quick Start Config
 
 ```json

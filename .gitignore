@@ -54,6 +54,9 @@ test_media/
 *.bak
 verification_report.json
 
+# Local config with secrets
+config.local.json
+
 # OS
 .DS_Store
 Thumbs.db
