@@ -2,9 +2,9 @@
 
 > **LIVING DOCUMENT:** This guide is maintained by AI assistants across sessions. If you discover new patterns, conventions, or lessons learned while working on this project, **UPDATE THE DETAILED GUIDES** and commit your changes. Future AI sessions depend on this knowledge.
 
-**Version:** 3.0
+**Version:** 3.1
 **Last Updated:** 2025-10-12
-**Changes from v2.0:** Split into focused guides (GUIDELINES, WORKFLOWS, TROUBLESHOOTING, REFERENCE)
+**Changes from v3.0:** Added Critical Rule #3 - ALWAYS verify related documentation is updated
 
 ---
 
@@ -16,9 +16,9 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ---
 
-## 5 Critical Rules (Non-Negotiable)
+## 6 Critical Rules (Non-Negotiable)
 
-1. **ALWAYS run tests before committing** - All 275 tests must pass
+1. **ALWAYS run tests before committing** - All 270+ tests must pass
    ```bash
    python -X utf8 -m pytest tests/unit/ -q --tb=line
    ```
@@ -27,15 +27,26 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
    - Add entry with Date + Time format: [2025-10-12 05:30]
    - Include: what changed, impact, files modified, test results
 
-3. **ALWAYS suggest git commit after completing tasks**
+3. **ALWAYS verify related documentation is updated**
+   - After updating CHANGELOG, search: `grep -r "feature_name" docs/ --include="*.md"`
+   - **Check ALL these locations:**
+     - `docs/core/` (ARCHITECTURE.md, CONFIGURATION.md, PIPELINE_STAGES.md)
+     - `docs/features/` (stage-specific docs)
+     - `docs/ai-assistant/` (WORKFLOWS.md, GUIDELINES.md)
+     - Root level (README.md, AI_GUIDE.md)
+     - Config files (config.local.json.example)
+   - See [WORKFLOWS.md Documentation Verification](ai-assistant/WORKFLOWS.md#documentation-verification)
+   - **Code + docs must be updated together** - no exceptions!
+
+4. **ALWAYS suggest git commit after completing tasks**
    - Ask: "Should I commit these changes to git?"
    - Use co-authorship footer (see [WORKFLOWS.md](ai-assistant/WORKFLOWS.md))
 
-4. **Check for redundancy before adding features**
+5. **Check for redundancy before adding features**
    - Stage 5 = hallucinations, Stage 6 = timing, Stage 8 = cleanup
    - Search first: `grep -r "feature_name"`
 
-5. **Follow Japanese text conventions**
+6. **Follow Japanese text conventions**
    - No spaces, particle variations (は/わ, を/お), 0.75 similarity threshold
 
 ---
@@ -72,6 +83,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 - Adding new filters
 - Modifying text similarity thresholds
 - Git commit workflow (with template)
+- **Documentation verification workflow** (Critical! Read before every commit)
 - Adding new knowledge base documents
 - Updating documentation (CHANGELOG, SESSIONS, LESSONS_LEARNED)
 

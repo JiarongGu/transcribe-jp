@@ -285,6 +285,75 @@ class LLMProvider:
 
 ## Documentation Structure
 
+### ✅ Lesson: ALWAYS Verify Documentation After Code Changes
+
+**Date:** 2025-10-12
+**Context:** Making segment_splitting stage optional
+
+**Mistake:** Initially updated code and CHANGELOG.md, but forgot to check related documentation:
+- Updated config.json, pipeline.py, display.py ✅
+- Updated CHANGELOG.md ✅
+- Updated 3 feature docs ✅
+- **Missed ARCHITECTURE.md** ❌ (user caught this!)
+
+**Problem:**
+- ARCHITECTURE.md still said "Stage 4 always runs"
+- Documentation became inconsistent with code
+- Users and future AI sessions would be confused
+- Documentation drift gets worse over time
+
+**Root Cause:** No systematic documentation verification step in workflow.
+
+**Solution:** Added Critical Rule #3 to AI_GUIDE.md:
+
+**"ALWAYS verify related documentation is updated"**
+
+Step-by-step workflow:
+1. Make code changes
+2. Run tests
+3. Update CHANGELOG.md
+4. **Search for affected docs:** `grep -r "feature_name" docs/ --include="*.md"`
+5. **Check ALL locations:**
+   - `docs/core/` (ARCHITECTURE, CONFIGURATION, PIPELINE_STAGES)
+   - `docs/features/` (stage-specific docs)
+   - `docs/ai-assistant/` (WORKFLOWS, GUIDELINES)
+   - Root level (README.md, AI_GUIDE.md)
+   - Config files (config.local.json.example)
+6. Update all affected documentation
+7. Commit code + docs together (atomic change)
+
+**Documentation Verification Checklist:**
+
+| Change Type | Documentation to Check |
+|-------------|------------------------|
+| New config setting | CONFIGURATION.md, config.local.json.example, stage doc |
+| Stage behavior change | PIPELINE_STAGES.md, ARCHITECTURE.md, stage doc |
+| New optional stage | PIPELINE_STAGES.md, CONFIGURATION.md, ARCHITECTURE.md |
+| New feature | README.md, CONFIGURATION.md, features/ |
+| Workflow change | WORKFLOWS.md, AI_GUIDE.md |
+| New limitation | LESSONS_LEARNED.md |
+
+**Example - Making stage optional affected 5 docs:**
+```bash
+grep -r "segment_splitting\|Segment Splitting" docs/ --include="*.md"
+# Found: CONFIGURATION.md, PIPELINE_STAGES.md, ARCHITECTURE.md,
+#        STAGE4_SEGMENT_SPLITTING.md, LLM_PROVIDERS.md
+# Updated all 5 + config.local.json.example
+```
+
+**Benefits:**
+- Code and documentation stay synchronized
+- Users get accurate information
+- Future AI sessions have correct context
+- No documentation drift
+- Changes are atomic (code + docs in same commit)
+
+**Lesson:** Documentation verification is NOT optional. Every code change must trigger a documentation review. Make it a Critical Rule so AI assistants never forget.
+
+**See:** [WORKFLOWS.md Documentation Verification](../ai-assistant/WORKFLOWS.md#documentation-verification)
+
+---
+
 ### ✅ Lesson: Create Topic-Specific Docs for Complex Features
 
 **Date:** 2025-10-11
