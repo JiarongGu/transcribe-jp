@@ -41,20 +41,20 @@ transcribe-jp is a modular Japanese audio transcription system that processes au
 ```
 Audio File (MP3/WAV/etc)
          ↓
-    [Stage 1] Audio Preprocessing
+    [Stage 1] Audio Preprocessing (optional)
          ↓ (normalization, format conversion)
     [Stage 2] Whisper Transcription
          ↓ (speech-to-text with word timestamps)
     [Stage 3] Segment Merging
          ↓ (merge incomplete sentences)
-    [Stage 4] Segment Splitting
+    [Stage 4] Segment Splitting (optional)
          ↓ (split long segments)
     [Stage 5] Hallucination Filtering
          ↓ (remove Whisper artifacts)
-    [Stage 6] Text Polishing
-         ↓ (LLM text refinement - optional)
-    [Stage 7] Timing Realignment
-         ↓ (final QA - optional)
+    [Stage 6] Text Polishing (optional)
+         ↓ (LLM text refinement)
+    [Stage 7] Timing Realignment (optional)
+         ↓ (final QA)
     [Stage 8] Final Cleanup
          ↓ (post-realignment stammer/hallucination filter)
     [Stage 9] VTT Generation
@@ -86,17 +86,20 @@ Audio File (MP3/WAV/etc)
 
 Each stage has its own module folder with full implementation:
 
-| Stage | Module | Purpose |
-|-------|--------|---------|
-| 1 | `stage1_audio_preprocessing/` | Audio normalization |
-| 2 | `stage2_whisper_transcription/` | Speech-to-text with Whisper |
-| 3 | `stage3_segment_merging/` | Merge incomplete sentences |
-| 4 | `stage4_segment_splitting/` | Split long segments (basic + LLM) |
-| 5 | `stage5_hallucination_filtering/` | Remove hallucinations |
-| 6 | `stage6_timing_realignment/` | Final timing QA |
-| 7 | `stage7_text_polishing/` | LLM text refinement |
-| 8 | `stage8_final_cleanup/` | Post-realignment cleanup |
-| 9 | `stage9_vtt_generation/` | WebVTT file writer |
+| Stage | Module | Purpose | Optional? |
+|-------|--------|---------|-----------|
+| 1 | `stage1_audio_preprocessing/` | Audio normalization | Yes |
+| 2 | `stage2_whisper_transcription/` | Speech-to-text with Whisper | No |
+| 3 | `stage3_segment_merging/` | Merge incomplete sentences | No |
+| 4 | `stage4_segment_splitting/` | Split long segments (basic + LLM) | Yes |
+| 5 | `stage5_hallucination_filtering/` | Remove hallucinations | No |
+| 6 | `stage6_timing_realignment/` | Final timing QA | Yes |
+| 7 | `stage7_text_polishing/` | LLM text refinement | Yes |
+| 8 | `stage8_final_cleanup/` | Post-realignment cleanup | No |
+| 9 | `stage9_vtt_generation/` | WebVTT file writer | No |
+
+**Core stages (always run):** 2, 3, 5, 8, 9 (5 stages)
+**Optional stages (can be disabled):** 1, 4, 6, 7 (4 stages)
 
 ### Shared Utilities (`shared/`)
 
@@ -158,6 +161,7 @@ Word timestamps are preserved throughout:
 - All features configurable
 - Stage-to-config 1:1 mapping
 - Safe defaults (most features opt-in)
+- 4 optional stages can be fully disabled (stages 1, 4, 6, 7)
 
 ### 3. Word Timestamp Preservation
 - Critical for accurate timing
@@ -203,6 +207,10 @@ Word timestamps are preserved throughout:
 
 - **GPU acceleration:** 10-100x faster with CUDA
 - **LLM batching:** Reduces API calls
-- **Optional stages:** Disable unused stages for speed
+- **Optional stages:** Disable stages 1, 4, 6, or 7 for faster processing
+  - Stage 1 (`audio_processing.enable = false`) - Skip audio normalization
+  - Stage 4 (`segment_splitting.enable = false`) - Skip line splitting
+  - Stage 6 (`timing_realignment.enable = false`) - Skip timing QA (saves 30-50% time)
+  - Stage 7 (`text_polishing.enable = false`) - Skip LLM refinement
 
 For detailed stage information, see [PIPELINE_STAGES.md](PIPELINE_STAGES.md).
