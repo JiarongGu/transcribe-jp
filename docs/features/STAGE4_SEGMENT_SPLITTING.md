@@ -4,10 +4,17 @@
 
 Segment Splitting breaks long subtitle segments into shorter, more readable lines at natural boundaries. It combines rule-based splitting with optional LLM-powered semantic analysis.
 
+**Stage is optional:** Set `segment_splitting.enable = false` to skip this stage entirely
+
 **When to use:**
 - Segments exceed max line length (default: 30 characters)
 - Want to split at natural linguistic boundaries
 - Need professional subtitle formatting
+
+**When to disable:**
+- You prefer long, unsplit segments
+- Your workflow handles splitting differently
+- Testing/debugging transcription accuracy
 
 **Performance:** Fast rule-based, optional LLM for semantic splitting
 
@@ -74,6 +81,7 @@ After splitting, **revalidates word-level timestamps** to ensure accuracy.
 ```json
 {
   "segment_splitting": {
+    "enable": true,                             // Set to false to skip this stage entirely
     "max_line_length": 30,                      // Max characters per subtitle line
     "primary_breaks": ["。", "？", "！", "?", "!"],
     "secondary_breaks": ["、", "わ", "ね", "よ"],
@@ -85,6 +93,10 @@ After splitting, **revalidates word-level timestamps** to ensure accuracy.
 ```
 
 ### Key Parameters
+
+- **`enable`**: Enable/disable the entire stage
+  - true = Split long segments (default)
+  - false = Skip splitting, keep segments as-is from Stage 3
 
 - **`max_line_length`**: Target line length
   - 30 characters recommended for Japanese
@@ -153,10 +165,20 @@ Split at: Natural semantic boundary (greeting vs suggestion)
 }
 ```
 
+### Disabled (no splitting at all)
+```json
+{
+  "segment_splitting": {
+    "enable": false               // Skip entire stage
+  }
+}
+```
+
 ### Fast processing (rule-based only)
 ```json
 {
   "segment_splitting": {
+    "enable": true,               // Enable stage
     "max_line_length": 35,        // Fewer splits
     "enable_llm": false,          // No LLM
     "enable_revalidate": false    // No re-transcription
@@ -279,4 +301,4 @@ python -m pytest tests/unit/modules/stage4_segment_splitting/ -v
 
 ---
 
-*Last updated: 2025-10-11*
+*Last updated: 2025-10-12*

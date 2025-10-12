@@ -41,8 +41,9 @@
 1. **Complete the work** (code + tests)
 2. **Run all tests** (`python -m pytest tests/ -v -q --tb=line`)
 3. **Update CHANGELOG.md** (add entry with Date + Time format)
-4. **Stage all changes** (`git add -A`)
-5. **Commit with descriptive message** (use template below)
+4. **Verify related documentation is updated** (see Documentation Verification below)
+5. **Stage all changes** (`git add -A`)
+6. **Commit with descriptive message** (use template below)
 
 ### Git Commit Template
 
@@ -66,6 +67,43 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
 
 **Common Mistake:** Forgetting to update CHANGELOG.md before committing. The user specifically requested CHANGELOG updates for ALL commits.
+
+### Documentation Verification
+
+**CRITICAL:** After updating CHANGELOG.md, verify if related documentation needs updates.
+
+**Search for affected documentation:**
+```bash
+# Search for mentions of the feature/config/stage you changed
+grep -r "feature_name" docs/ --include="*.md"
+grep -r "config_key" docs/ --include="*.md"
+```
+
+**Common documentation files to check:**
+
+| Change Type | Documentation to Update |
+|-------------|-------------------------|
+| **New config setting** | `docs/core/CONFIGURATION.md`, `config.local.json.example`, stage-specific doc in `docs/features/` |
+| **Stage behavior change** | `docs/core/PIPELINE_STAGES.md`, `docs/features/STAGEX_*.md` |
+| **New optional stage** | `docs/core/PIPELINE_STAGES.md`, `docs/core/CONFIGURATION.md`, `core/display.py` comments |
+| **New feature** | `docs/features/`, `README.md` (if user-facing), `docs/core/CONFIGURATION.md` |
+| **API/workflow change** | `docs/ai-assistant/WORKFLOWS.md`, `docs/AI_GUIDE.md` |
+| **New limitation/gotcha** | `docs/maintenance/LESSONS_LEARNED.md` |
+
+**Example workflow:**
+1. You made segment_splitting stage optional
+2. Updated CHANGELOG.md ✅
+3. Search: `grep -r "segment_splitting\|Segment Splitting" docs/ --include="*.md"`
+4. Found: CONFIGURATION.md, PIPELINE_STAGES.md, STAGE4_SEGMENT_SPLITTING.md, LLM_PROVIDERS.md
+5. Update each file with new `enable` setting
+6. Update config.local.json.example with inline comment
+7. Now commit everything together
+
+**Why this matters:**
+- Users rely on documentation to understand features
+- AI assistants in future sessions need accurate docs
+- Stale documentation causes confusion and bugs
+- Documentation updates should be atomic with code changes
 
 ---
 

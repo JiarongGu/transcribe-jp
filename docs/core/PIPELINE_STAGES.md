@@ -91,10 +91,11 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 
 ---
 
-## Stage 4: Segment Splitting
+## Stage 4: Segment Splitting (Optional)
 **Config Section:** `segment_splitting`
 **Module:** [modules/stage4_segment_splitting/](../modules/stage4_segment_splitting/)
 **Purpose:** Break long segments into display-friendly lengths
+**Optional:** Set `enable: false` to skip this stage entirely
 
 **Operations:**
 - Split segments by max line length
@@ -106,10 +107,11 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 ```json
 {
   "segment_splitting": {
+    "enable": true,               // Set to false to skip this stage
     "max_line_length": 30,
     "primary_breaks": ["。", "？", "！"],
     "secondary_breaks": ["、", "わ", "ね", "よ"],
-    "enable": true,
+    "enable_llm": true,
     "enable_revalidate": true
   }
 }
@@ -383,11 +385,11 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 | `audio_processing` | Stage 1 | Yes |
 | `whisper` | Stage 2 | No |
 | `segment_merging` | Stage 3 | No |
-| `segment_splitting` | Stage 4 | Partially |
+| `segment_splitting` | Stage 4 | Yes (NEW) |
 | `hallucination_filter` | Stage 5 | Partially |
 | `text_polishing` | Stage 6 | Yes |
 | `timing_realignment` | Stage 7 | Yes |
 | `final_cleanup` | Stage 8 | Partially |
 | N/A | Stage 9 | No |
 
-**Note:** Stages 2, 3, 8, and 9 always run. All other stages can be disabled through configuration.
+**Note:** Stages 2, 3, 5, 8, and 9 always run (5 core stages). Stages 1, 4, 6, 7 can be fully disabled (4 optional stages).

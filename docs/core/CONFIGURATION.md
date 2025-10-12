@@ -155,17 +155,18 @@ Merges segments that end with incomplete sentence markers.
 
 ---
 
-### Stage 4: Segment Splitting
+### Stage 4: Segment Splitting (Optional)
 
-Splits long segments into readable subtitle lines.
+Splits long segments into readable subtitle lines. **This stage can be fully disabled.**
 
 ```json
 {
   "segment_splitting": {
+    "enable": true,
     "max_line_length": 30,
     "primary_breaks": ["。", "？", "！", "?", "!"],
     "secondary_breaks": ["、", "わ", "ね", "よ"],
-    "enable": true,
+    "enable_llm": true,
     "enable_revalidate": true,
     "revalidation_confidence_threshold": 0.7
   }
@@ -174,17 +175,23 @@ Splits long segments into readable subtitle lines.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `enable` | boolean | `true` | Enable/disable the entire stage |
 | `max_line_length` | integer | `30` | Maximum characters per subtitle line |
 | `primary_breaks` | array | See above | Best places to split (sentence endings) |
 | `secondary_breaks` | array | See above | OK places to split (commas, particles) |
-| `enable` | boolean | `true` | Use AI for intelligent splitting |
+| `enable_llm` | boolean | `true` | Use AI for intelligent splitting |
 | `enable_revalidate` | boolean | `true` | Re-validate LLM splits with Whisper |
 | `revalidation_confidence_threshold` | float | `0.7` | Confidence threshold for revalidation |
 
 **Splitting Behavior:**
 1. **Basic splitting**: Splits at punctuation marks within `max_line_length`
-2. **LLM splitting** (if `enable: true`): AI finds natural break points
+2. **LLM splitting** (if `enable_llm: true`): AI finds natural break points
 3. **Revalidation** (if `enable_revalidate: true`): Whisper verifies splits match audio
+
+**When to disable (`enable: false`):**
+- You prefer long, unsplit segments
+- Your workflow handles splitting differently
+- Testing/debugging transcription accuracy
 
 **Notes:**
 - `max_line_length: 30` is optimal for Japanese subtitles
@@ -565,8 +572,7 @@ For quick transcription without AI enhancement:
   },
   "segment_merging": {},
   "segment_splitting": {
-    "max_line_length": 30,
-    "enable": false
+    "enable": false              // Disable splitting entirely
   },
   "hallucination_filter": {
     "phrase_filter": {"enable": false},
@@ -608,8 +614,9 @@ For best quality transcription with all enhancements:
     "max_merge_gap": 0.5
   },
   "segment_splitting": {
+    "enable": true,               // Enable splitting
     "max_line_length": 30,
-    "enable": true,
+    "enable_llm": true,
     "enable_revalidate": true
   },
   "hallucination_filter": {
@@ -649,9 +656,10 @@ For best quality transcription with all enhancements:
 - Requires NVIDIA GPU with CUDA support
 
 **Disable Optional Stages:**
-- Set `timing_realignment.enable: false` (saves 30-50% time)
-- Set `segment_splitting.enable: false` (saves API costs)
+- Set `audio_processing.enable: false` (skip normalization)
+- Set `segment_splitting.enable: false` (skip splitting, saves API costs if LLM enabled)
 - Set `text_polishing.enable: false` (saves API costs)
+- Set `timing_realignment.enable: false` (saves 30-50% time)
 
 ### Quality Optimization
 
@@ -662,7 +670,7 @@ For best quality transcription with all enhancements:
 
 **Best Text:**
 - Enable `text_polishing.enable: true`
-- Enable `segment_splitting.enable: true`
+- Enable `segment_splitting.enable: true` with `enable_llm: true`
 - Enable all hallucination filters
 
 ### Cost Optimization
