@@ -29,7 +29,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 3. **ALWAYS suggest git commit after completing tasks**
    - Ask: "Should I commit these changes to git?"
-   - Use co-authorship footer (see [WORKFLOWS.md](maintenance/ai/WORKFLOWS.md))
+   - Use co-authorship footer (see [WORKFLOWS.md](ai-assistant/WORKFLOWS.md))
 
 4. **Check for redundancy before adding features**
    - Stage 5 = hallucinations, Stage 6 = timing, Stage 8 = cleanup
@@ -48,13 +48,13 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 2. [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - **START HERE!** Mistakes to avoid
 3. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
 4. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
-5. **[maintenance/ai/GUIDELINES.md](maintenance/ai/GUIDELINES.md)** - Critical DO's and DON'Ts (detailed)
+5. **[ai-assistant/GUIDELINES.md](ai-assistant/GUIDELINES.md)** - Critical DO's and DON'Ts (detailed)
 
 ---
 
 ## Detailed AI Guides
 
-### [GUIDELINES.md](maintenance/ai/GUIDELINES.md)
+### [GUIDELINES.md](ai-assistant/GUIDELINES.md)
 **Critical DO's and DON'Ts for AI assistants**
 
 - Complete list of DO's (8 rules) and DON'Ts (6 common mistakes)
@@ -66,7 +66,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ---
 
-### [WORKFLOWS.md](maintenance/ai/WORKFLOWS.md)
+### [WORKFLOWS.md](ai-assistant/WORKFLOWS.md)
 **Step-by-step workflows for common tasks**
 
 - Adding new filters
@@ -79,7 +79,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ---
 
-### [TROUBLESHOOTING.md](maintenance/ai/TROUBLESHOOTING.md)
+### [TROUBLESHOOTING.md](ai-assistant/TROUBLESHOOTING.md)
 **Solutions to common problems and debugging strategies**
 
 - Unicode errors, import errors, timing overlaps
@@ -92,7 +92,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ---
 
-### [REFERENCE.md](maintenance/ai/REFERENCE.md)
+### [REFERENCE.md](ai-assistant/REFERENCE.md)
 **Quick reference for commands, settings, and file locations**
 
 - Essential commands (tests, git, pipeline)
@@ -122,7 +122,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 ```
 AI ASSISTANT GUIDES
 ├── AI_GUIDE.md (this file)                  # Overview + navigation
-└── maintenance/ai/
+└── ai-assistant/
     ├── GUIDELINES.md                        # Critical DO's and DON'Ts
     ├── WORKFLOWS.md                         # Step-by-step workflows
     ├── TROUBLESHOOTING.md                   # Problem solving

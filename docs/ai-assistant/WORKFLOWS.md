@@ -3,7 +3,7 @@
 **Quick Reference:** Step-by-step workflows for common tasks
 
 **Last Updated:** 2025-10-12
-**Related:** [AI_GUIDE.md](../../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
+**Related:** [AI_GUIDE.md](../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
 
 ---
 
@@ -276,7 +276,7 @@ Frequently asked questions
 
 ### LESSONS_LEARNED.md - Your First Stop
 
-**[LESSONS_LEARNED.md](../LESSONS_LEARNED.md)** is a curated knowledge database of:
+**[LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md)** is a curated knowledge database of:
 - **Mistakes to avoid** - Learn from past errors
 - **Design decisions** - Understand why things are the way they are
 - **Gotchas and patterns** - Non-obvious issues and solutions
@@ -290,7 +290,6 @@ Frequently asked questions
 
 **Current status (2025-10-12):** ~163 KB (~42K tokens, 21% of 200K context)
 
-**See:** [DOCUMENTATION_SCALING_STRATEGY.md](../DOCUMENTATION_SCALING_STRATEGY.md) for complete strategy.
 
 **Key actions for AI assistants:**
 1. **When CHANGELOG.md > 50KB:** Archive previous month to `maintenance/CHANGELOG_ARCHIVE_YYYY-MM.md`
@@ -305,11 +304,11 @@ Frequently asked questions
 4. You solved a tricky problem
 5. You refactored and want to explain why
 
-**Format:** See [LESSONS_LEARNED.md](../LESSONS_LEARNED.md#how-to-update-this-document) for template.
+**Format:** See [LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md#how-to-update-this-document) for template.
 
 ### SESSIONS.md - Development History
 
-**[SESSIONS.md](../../SESSIONS.md)** tracks session-by-session development:
+**[SESSIONS.md](../SESSIONS.md)** tracks session-by-session development:
 - What was accomplished
 - Why decisions were made
 - Lessons learned
@@ -341,8 +340,8 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 
 ## See Also
 
-- [AI_GUIDE.md](../../AI_GUIDE.md) - Main AI assistant guide
+- [AI_GUIDE.md](../AI_GUIDE.md) - Main AI assistant guide
 - [GUIDELINES.md](GUIDELINES.md) - Critical DO's and DON'Ts
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Problem solving guide
 - [REFERENCE.md](REFERENCE.md) - Quick reference and key settings
-- [LESSONS_LEARNED.md](../LESSONS_LEARNED.md) - Knowledge database
+- [LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md) - Knowledge database

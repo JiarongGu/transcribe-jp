@@ -3,7 +3,7 @@
 **Quick Reference:** Essential commands, settings, and file locations at a glance
 
 **Last Updated:** 2025-10-12
-**Related:** [AI_GUIDE.md](../../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
+**Related:** [AI_GUIDE.md](../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
 
 ---
 
@@ -63,7 +63,7 @@ python main.py input.mp4 --stages 1-6
 
 **Location:** `config.json`
 **Override:** `config.local.json` (deep merge, not tracked in git)
-**Full reference:** [core/CONFIGURATION.md](../../core/CONFIGURATION.md)
+**Full reference:** [core/CONFIGURATION.md](../core/CONFIGURATION.md)
 
 ### Similarity Thresholds (0.75)
 
@@ -311,10 +311,10 @@ START HERE
 ├── README.md                    # Project overview, installation, usage
 ├── maintenance/LESSONS_LEARNED  # Knowledge database (read FIRST!)
 └── AI_GUIDE.md                  # Main AI guide (you are here)
-    ├── maintenance/ai/GUIDELINES.md      # Critical DO's and DON'Ts
-    ├── maintenance/ai/WORKFLOWS.md       # Common tasks, git workflow
-    ├── maintenance/ai/TROUBLESHOOTING.md # Problem solving
-    └── maintenance/ai/REFERENCE.md       # Quick reference (this file)
+    ├── ai-assistant/GUIDELINES.md      # Critical DO's and DON'Ts
+    ├── ai-assistant/WORKFLOWS.md       # Common tasks, git workflow
+    ├── ai-assistant/TROUBLESHOOTING.md # Problem solving
+    └── ai-assistant/REFERENCE.md       # Quick reference (this file)
 
 DETAILED DOCS
 ├── core/ARCHITECTURE.md         # System design, 9-stage pipeline
@@ -401,9 +401,9 @@ python -c "import sys; print('\n'.join(sys.path))"
 
 ## See Also
 
-- [AI_GUIDE.md](../../AI_GUIDE.md) - Main AI assistant guide
+- [AI_GUIDE.md](../AI_GUIDE.md) - Main AI assistant guide
 - [GUIDELINES.md](GUIDELINES.md) - Critical DO's and DON'Ts
 - [WORKFLOWS.md](WORKFLOWS.md) - Common workflows and procedures
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Problem solving guide
-- [core/CONFIGURATION.md](../../core/CONFIGURATION.md) - Full config reference
-- [features/LLM_PROVIDERS.md](../../features/LLM_PROVIDERS.md) - LLM configuration
+- [core/CONFIGURATION.md](../core/CONFIGURATION.md) - Full config reference
+- [features/LLM_PROVIDERS.md](../features/LLM_PROVIDERS.md) - LLM configuration

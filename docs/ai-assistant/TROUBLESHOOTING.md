@@ -3,7 +3,7 @@
 **Quick Reference:** Solutions to common problems and debugging strategies
 
 **Last Updated:** 2025-10-12
-**Related:** [AI_GUIDE.md](../../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
+**Related:** [AI_GUIDE.md](../AI_GUIDE.md), [GUIDELINES.md](GUIDELINES.md)
 
 ---
 
@@ -121,7 +121,7 @@ pwd
 
 **Problem:** LLM stages (4, 7) failing with provider errors
 
-**Solution:** See [features/LLM_PROVIDERS.md](../../features/LLM_PROVIDERS.md) for complete guide
+**Solution:** See [features/LLM_PROVIDERS.md](../features/LLM_PROVIDERS.md) for complete guide
 
 **Quick checks:**
 1. Verify API key is set (environment variable or config)
@@ -366,9 +366,9 @@ git checkout HEAD~1 -- path/to/file.py
 
 ## See Also
 
-- [AI_GUIDE.md](../../AI_GUIDE.md) - Main AI assistant guide
+- [AI_GUIDE.md](../AI_GUIDE.md) - Main AI assistant guide
 - [GUIDELINES.md](GUIDELINES.md) - Critical DO's and DON'Ts
 - [WORKFLOWS.md](WORKFLOWS.md) - Common workflows
 - [REFERENCE.md](REFERENCE.md) - Quick reference and key settings
-- [LESSONS_LEARNED.md](../LESSONS_LEARNED.md) - Knowledge database
-- [features/LLM_PROVIDERS.md](../../features/LLM_PROVIDERS.md) - LLM troubleshooting
+- [LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md) - Knowledge database
+- [features/LLM_PROVIDERS.md](../features/LLM_PROVIDERS.md) - LLM troubleshooting

@@ -3,7 +3,7 @@
 **Quick Reference:** Critical DO's and DON'Ts for AI assistants working on this project
 
 **Last Updated:** 2025-10-12
-**Related:** [AI_GUIDE.md](../../AI_GUIDE.md), [LESSONS_LEARNED.md](../LESSONS_LEARNED.md)
+**Related:** [AI_GUIDE.md](../AI_GUIDE.md), [LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md)
 
 ---
 
@@ -168,8 +168,8 @@ python -X utf8 -m pytest tests/e2e/ -v
 
 ## See Also
 
-- [AI_GUIDE.md](../../AI_GUIDE.md) - Main AI assistant guide
+- [AI_GUIDE.md](../AI_GUIDE.md) - Main AI assistant guide
 - [WORKFLOWS.md](WORKFLOWS.md) - Common workflows and git procedures
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Problem solving guide
 - [REFERENCE.md](REFERENCE.md) - Quick reference and key settings
-- [LESSONS_LEARNED.md](../LESSONS_LEARNED.md) - Knowledge database
+- [LESSONS_LEARNED.md](../maintenance/LESSONS_LEARNED.md) - Knowledge database
