@@ -13,6 +13,7 @@ def get_display_stages(config):
         List of (stage_name, enabled) tuples
     """
     audio_config = config.get("audio_processing", {})
+    merging_config = config.get("segment_merging", {})
     splitting_config = config.get("segment_splitting", {})
     hallucination_config = config.get("hallucination_filter", {})
     polishing_config = config.get("text_polishing", {})
@@ -25,7 +26,7 @@ def get_display_stages(config):
     stages = [
         ("1. Audio Preprocessing", audio_config.get("enable", False)),
         ("2. Whisper Transcription", True),  # Always enabled
-        ("3. Segment Merging", True),  # Always enabled
+        ("3. Segment Merging", merging_config.get("enable", True)),
         ("4. Segment Splitting", splitting_config.get("enable", True)),
         ("   - LLM Intelligent Splitting", splitting_config.get("enable_llm", False)),
         ("   - Revalidate Splits", splitting_config.get("enable_revalidate", False)),
@@ -54,14 +55,15 @@ def display_pipeline_summary(config):
 
     stages = get_display_stages(config)
 
-    # Always-on stages: 2, 3, 5, 8, 9 (5 core stages that always run)
-    always_on_stages = ["2. Whisper Transcription", "3. Segment Merging",
+    # Always-on stages: 2, 5, 8, 9 (4 core stages that always run)
+    always_on_stages = ["2. Whisper Transcription",
                         "5. Hallucination Filtering",
                         "8. Final Cleanup", "9. VTT Generation"]
 
-    # Optional stages: 1, 4, 6, 7 (can be enabled/disabled)
-    optional_stage_names = ["1. Audio Preprocessing", "4. Segment Splitting",
-                            "6. Text Polishing", "7. Timing Realignment"]
+    # Optional stages: 1, 3, 4, 6, 7 (can be enabled/disabled)
+    optional_stage_names = ["1. Audio Preprocessing", "3. Segment Merging",
+                            "4. Segment Splitting", "6. Text Polishing",
+                            "7. Timing Realignment"]
 
     # Count only main stages (those starting with numbers)
     main_stages = [(name, enabled) for name, enabled in stages if name[0].isdigit()]
@@ -69,7 +71,7 @@ def display_pipeline_summary(config):
     # Count optional stages that are enabled
     optional_enabled = sum(1 for name, enabled in main_stages if name in optional_stage_names and enabled)
 
-    print(f"\nPipeline: 5 core stages (always-on) + {optional_enabled}/4 optional stages\n")
+    print(f"\nPipeline: 4 core stages (always-on) + {optional_enabled}/5 optional stages\n")
 
     for stage_name, enabled in stages:
         # Always-on stages show [*] to indicate they're mandatory

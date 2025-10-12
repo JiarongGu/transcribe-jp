@@ -68,10 +68,11 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 
 ---
 
-## Stage 3: Segment Merging
+## Stage 3: Segment Merging (Optional)
 **Config Section:** `segment_merging`
 **Module:** [modules/stage3_segment_merging/](../modules/stage3_segment_merging/)
-**Purpose:** Combine incomplete sentences into natural boundaries
+**Purpose:** Combine incomplete sentences
+**Optional:** Set `enable: false` to skip this stage entirely
 
 **Operations:**
 - Detects incomplete sentence endings (particles: "て", "で", "と", "が")
@@ -82,6 +83,7 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 ```json
 {
   "segment_merging": {
+    "enable": true,              // Set to false to skip this stage
     "incomplete_markers": ["て", "で", "と", "が"],
     "sentence_enders": ["。", "？", "！"],
     "max_merge_gap": 0.5
@@ -384,7 +386,7 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 |----------------|----------------|-----------|
 | `audio_processing` | Stage 1 | Yes |
 | `whisper` | Stage 2 | No |
-| `segment_merging` | Stage 3 | No |
+| `segment_merging` | Stage 3 | Yes (NEW) |
 | `segment_splitting` | Stage 4 | Yes (NEW) |
 | `hallucination_filter` | Stage 5 | Partially |
 | `text_polishing` | Stage 6 | Yes |
@@ -392,4 +394,4 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 | `final_cleanup` | Stage 8 | Partially |
 | N/A | Stage 9 | No |
 
-**Note:** Stages 2, 3, 5, 8, and 9 always run (5 core stages). Stages 1, 4, 6, 7 can be fully disabled (4 optional stages).
+**Note:** Stages 2, 5, 8, and 9 always run (4 core stages). Stages 1, 3, 4, 6, 7 can be fully disabled (5 optional stages).

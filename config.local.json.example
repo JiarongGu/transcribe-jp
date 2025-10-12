@@ -27,6 +27,10 @@
     }
   },
 
+  "segment_merging": {
+    "enable": true       // Set to false to skip merging incomplete sentences
+  },
+
   "segment_splitting": {
     "enable": true,      // Set to false to skip splitting long segments
     "enable_llm": true

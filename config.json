@@ -17,6 +17,7 @@
     "condition_on_previous_text": false
   },
   "segment_merging": {
+    "enable": true,
     "incomplete_markers": ["て", "で", "と", "が", "けど", "ども", "たり"],
     "sentence_enders": ["。", "？", "！", "?", "!", "ね", "よ", "わ", "な", "か"],
     "max_merge_gap": 0.5,

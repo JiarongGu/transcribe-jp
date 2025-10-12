@@ -45,7 +45,7 @@ Audio File (MP3/WAV/etc)
          ↓ (normalization, format conversion)
     [Stage 2] Whisper Transcription
          ↓ (speech-to-text with word timestamps)
-    [Stage 3] Segment Merging
+    [Stage 3] Segment Merging (optional)
          ↓ (merge incomplete sentences)
     [Stage 4] Segment Splitting (optional)
          ↓ (split long segments)
@@ -90,7 +90,7 @@ Each stage has its own module folder with full implementation:
 |-------|--------|---------|-----------|
 | 1 | `stage1_audio_preprocessing/` | Audio normalization | Yes |
 | 2 | `stage2_whisper_transcription/` | Speech-to-text with Whisper | No |
-| 3 | `stage3_segment_merging/` | Merge incomplete sentences | No |
+| 3 | `stage3_segment_merging/` | Merge incomplete sentences | Yes |
 | 4 | `stage4_segment_splitting/` | Split long segments (basic + LLM) | Yes |
 | 5 | `stage5_hallucination_filtering/` | Remove hallucinations | No |
 | 6 | `stage6_timing_realignment/` | Final timing QA | Yes |
@@ -98,8 +98,8 @@ Each stage has its own module folder with full implementation:
 | 8 | `stage8_final_cleanup/` | Post-realignment cleanup | No |
 | 9 | `stage9_vtt_generation/` | WebVTT file writer | No |
 
-**Core stages (always run):** 2, 3, 5, 8, 9 (5 stages)
-**Optional stages (can be disabled):** 1, 4, 6, 7 (4 stages)
+**Core stages (always run):** 2, 5, 8, 9 (4 stages)
+**Optional stages (can be disabled):** 1, 3, 4, 6, 7 (5 stages)
 
 ### Shared Utilities (`shared/`)
 
@@ -161,7 +161,7 @@ Word timestamps are preserved throughout:
 - All features configurable
 - Stage-to-config 1:1 mapping
 - Safe defaults (most features opt-in)
-- 4 optional stages can be fully disabled (stages 1, 4, 6, 7)
+- 5 optional stages can be fully disabled (stages 1, 3, 4, 6, 7)
 
 ### 3. Word Timestamp Preservation
 - Critical for accurate timing
@@ -207,8 +207,9 @@ Word timestamps are preserved throughout:
 
 - **GPU acceleration:** 10-100x faster with CUDA
 - **LLM batching:** Reduces API calls
-- **Optional stages:** Disable stages 1, 4, 6, or 7 for faster processing
+- **Optional stages:** Disable stages 1, 3, 4, 6, or 7 for faster processing
   - Stage 1 (`audio_processing.enable = false`) - Skip audio normalization
+  - Stage 3 (`segment_merging.enable = false`) - Skip sentence merging
   - Stage 4 (`segment_splitting.enable = false`) - Skip line splitting
   - Stage 6 (`timing_realignment.enable = false`) - Skip timing QA (saves 30-50% time)
   - Stage 7 (`text_polishing.enable = false`) - Skip LLM refinement

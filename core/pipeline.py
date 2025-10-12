@@ -59,12 +59,18 @@ def run_pipeline(media_path, model, output_dir, config):
         print(f"  - Transcription complete: {len(result['segments'])} segments")
 
         # ========================================
-        # STAGE 3: Segment Merging
+        # STAGE 3: Segment Merging (Optional)
         # ========================================
-        print("\n[Stage 3/9] Segment Merging")
-        print("  - Merging incomplete sentences...")
-        merged_segments = merge_incomplete_segments(result['segments'], config)
-        print(f"  - After merging: {len(merged_segments)} segments")
+        merging_config = config.get("segment_merging", {})
+        if merging_config.get("enable", True):
+            print("\n[Stage 3/9] Segment Merging")
+            print("  - Merging incomplete sentences...")
+            merged_segments = merge_incomplete_segments(result['segments'], config)
+            print(f"  - After merging: {len(merged_segments)} segments")
+        else:
+            print("\n[Stage 3/9] Segment Merging (Skipped)")
+            # Use raw Whisper segments without merging
+            merged_segments = result['segments']
 
         # ========================================
         # STAGE 4: Segment Splitting (Optional)

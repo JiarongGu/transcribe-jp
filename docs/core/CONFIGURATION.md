@@ -126,13 +126,14 @@ Core speech-to-text transcription using OpenAI Whisper.
 
 ---
 
-### Stage 3: Segment Merging
+### Stage 3: Segment Merging (Optional)
 
-Merges segments that end with incomplete sentence markers.
+Merges segments that end with incomplete sentence markers. **This stage can be fully disabled.**
 
 ```json
 {
   "segment_merging": {
+    "enable": true,
     "incomplete_markers": ["て", "で", "と", "が", "けど", "ども", "たり"],
     "sentence_enders": ["。", "？", "！", "?", "!", "ね", "よ", "わ", "な", "か"],
     "max_merge_gap": 0.5,
@@ -143,6 +144,7 @@ Merges segments that end with incomplete sentence markers.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
+| `enable` | boolean | `true` | Enable/disable the entire stage |
 | `incomplete_markers` | array | See above | Particles indicating incomplete sentences |
 | `sentence_enders` | array | See above | Characters indicating complete sentences |
 | `max_merge_gap` | float | `0.5` | Max gap (seconds) between segments to merge |
@@ -571,6 +573,7 @@ For quick transcription without AI enhancement:
     "device": "cuda"
   },
   "segment_merging": {},
+    "enable": true,
   "segment_splitting": {
     "enable": false              // Disable splitting entirely
   },
@@ -611,6 +614,7 @@ For best quality transcription with all enhancements:
     "best_of": 5
   },
   "segment_merging": {
+    "enable": true,
     "max_merge_gap": 0.5
   },
   "segment_splitting": {

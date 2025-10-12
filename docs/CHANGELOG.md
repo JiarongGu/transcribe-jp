@@ -1,3 +1,53 @@
+## [2025-10-12 07:15]
+
+### Changed
+- **Made segment_merging stage optional**
+  - Added `enable` setting to `segment_merging` config (defaults to `true`)
+  - Stage 3 can now be skipped when `segment_merging.enable = false`
+  - Updated pipeline to conditionally skip segment merging
+  - Updated display to show segment_merging as optional stage
+  - Pipeline now shows: "4 core stages (always-on) + X/5 optional stages"
+
+**Why optional:**
+Some users may want to work with raw Whisper segments without merging incomplete sentences. This is useful for:
+- Preserving original Whisper segment boundaries
+- Testing/debugging transcription behavior
+- Workflows that require unmodified Whisper output
+
+**Config example:**
+```json
+{
+  "segment_merging": {
+    "enable": false  // Skip merging incomplete sentences
+  }
+}
+```
+
+**When disabled:**
+- Raw Whisper segments from Stage 2 pass directly to Stage 4 (or hallucination filtering if splitting disabled)
+- No sentence merging is applied
+- Segments may end mid-sentence (て、で、と、が particles)
+
+**Optional stages:** Now 5 stages can be toggled:
+1. Audio Preprocessing
+2. Segment Merging (NEW - now optional)
+3. Segment Splitting
+4. Text Polishing
+5. Timing Realignment
+
+**Core stages (always run):** Whisper Transcription, Hallucination Filtering, Final Cleanup, VTT Generation (4 stages)
+
+**Files changed:**
+- `config.json` - Added `enable: true` to segment_merging
+- `core/pipeline.py` - Added conditional logic for stage 3
+- `core/display.py` - Updated to show stage 3 as optional (4 core, 5 optional)
+- `config.local.json.example` - Added inline comment for new setting
+- `tests/unit/core/test_pipeline.py` - Updated tests for new optional stage
+
+**Test results:** 270/270 tests pass ✅
+
+---
+
 ## [2025-10-12 07:00]
 
 ### Changed
@@ -656,6 +706,7 @@ docs/
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
+| 2025-10-12 07:15 | Changed | Made segment_merging stage optional               | 270     |
 | 2025-10-12 07:00 | Changed | Made segment_splitting stage optional             | 270     |
 | 2025-10-12 06:45 | Changed | Simplified documentation structure                | 275     |
 | 2025-10-12 06:30 | Changed | Complete documentation refactoring (AI guides)    | 275     |
