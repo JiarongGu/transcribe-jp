@@ -1,3 +1,46 @@
+## [2025-10-12 07:00]
+
+### Changed
+- **Made segment_splitting stage optional**
+  - Added `enable` setting to `segment_splitting` config (defaults to `true`)
+  - Stage 4 can now be skipped when `segment_splitting.enable = false`
+  - Updated pipeline to conditionally skip segment splitting
+  - Updated display to show segment_splitting as optional stage
+  - Pipeline now shows: "5 core stages (always-on) + X/4 optional stages"
+
+**Why optional:**
+Some users may prefer to keep long segments intact without splitting them by line length. This is useful for:
+- Subtitles that don't need line breaks
+- Processing workflows that handle splitting differently
+- Testing/debugging transcription accuracy
+
+**Config example:**
+```json
+{
+  "segment_splitting": {
+    "enable": false  // Skip segment splitting entirely
+  }
+}
+```
+
+**When disabled:**
+- Segments from Stage 3 (merging) pass directly to Stage 5 (hallucination filtering)
+- No line-length splitting is applied
+- LLM splitting sub-features are also skipped
+
+**Optional stages:** Now 4 stages can be toggled (Audio Preprocessing, Segment Splitting, Text Polishing, Timing Realignment)
+
+**Files changed:**
+- `config.json` - Added `enable: true` to segment_splitting
+- `core/pipeline.py` - Added conditional logic for stage 4
+- `core/display.py` - Updated to show stage 4 as optional
+- `config.local.json.example` - Added inline comment for new setting
+- `tests/unit/core/test_pipeline.py` - Updated tests for new optional stage
+
+**Test results:** 270/270 tests pass ✅
+
+---
+
 ## [2025-10-12 06:45]
 
 ### Changed
@@ -613,6 +656,7 @@ docs/
 
 | Date & Time      | Type    | Summary                                           | Tests   |
 |------------------|---------|---------------------------------------------------|---------|
+| 2025-10-12 07:00 | Changed | Made segment_splitting stage optional             | 270     |
 | 2025-10-12 06:45 | Changed | Simplified documentation structure                | 275     |
 | 2025-10-12 06:30 | Changed | Complete documentation refactoring (AI guides)    | 275     |
 | 2025-10-12 06:00 | Added   | AI_GUIDE.md refactoring plan for scalability      | 275     |

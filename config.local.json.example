@@ -28,6 +28,7 @@
   },
 
   "segment_splitting": {
+    "enable": true,      // Set to false to skip splitting long segments
     "enable_llm": true
     // "llm_provider": "ollama"  // Uncomment to override global provider for this stage
   },

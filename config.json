@@ -23,6 +23,7 @@
     "merge_length_buffer": 15
   },
   "segment_splitting": {
+    "enable": true,
     "max_line_length": 30,
     "primary_breaks": ["。", "？", "！", "?", "!"],
     "secondary_breaks": ["、", "わ", "ね", "よ"],

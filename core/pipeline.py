@@ -67,15 +67,28 @@ def run_pipeline(media_path, model, output_dir, config):
         print(f"  - After merging: {len(merged_segments)} segments")
 
         # ========================================
-        # STAGE 4: Segment Splitting
+        # STAGE 4: Segment Splitting (Optional)
         # ========================================
-        print("\n[Stage 4/9] Segment Splitting")
-        print("  - Splitting segments by line length...")
-        all_sub_segments = []
-        for segment in merged_segments:
-            sub_segments = split_segment_with_timing(segment, config)
-            all_sub_segments.extend(sub_segments)
-        print(f"    {len(all_sub_segments)} segments after splitting")
+        splitting_config = config.get("segment_splitting", {})
+        if splitting_config.get("enable", True):
+            print("\n[Stage 4/9] Segment Splitting")
+            print("  - Splitting segments by line length...")
+            all_sub_segments = []
+            for segment in merged_segments:
+                sub_segments = split_segment_with_timing(segment, config)
+                all_sub_segments.extend(sub_segments)
+            print(f"    {len(all_sub_segments)} segments after splitting")
+        else:
+            print("\n[Stage 4/9] Segment Splitting (Skipped)")
+            # Convert merged segments to the expected format (start, end, text, words)
+            all_sub_segments = []
+            for segment in merged_segments:
+                all_sub_segments.append((
+                    segment['start'],
+                    segment['end'],
+                    segment['text'].strip(),
+                    segment.get('words', [])
+                ))
 
         # ========================================
         # STAGE 5: Hallucination Filtering

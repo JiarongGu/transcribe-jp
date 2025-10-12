@@ -37,10 +37,9 @@ def test_get_display_stages():
     assert stage_dict["   - Stammer Filter"] == True
     assert stage_dict["7. Timing Realignment"] == True
 
-    # Always-enabled stages
+    # Always-enabled stages (core stages)
     assert stage_dict["2. Whisper Transcription"] == True
     assert stage_dict["3. Segment Merging"] == True
-    assert stage_dict["4. Segment Splitting"] == True
     assert stage_dict["5. Hallucination Filtering"] == True
     assert stage_dict["8. Final Cleanup"] == True
     assert stage_dict["9. VTT Generation"] == True
@@ -56,13 +55,13 @@ def test_get_display_stages_minimal():
     # Only mandatory stages should be enabled
     assert stage_dict["2. Whisper Transcription"] == True
     assert stage_dict["3. Segment Merging"] == True
-    assert stage_dict["4. Segment Splitting"] == True
     assert stage_dict["5. Hallucination Filtering"] == True
     assert stage_dict["8. Final Cleanup"] == True
     assert stage_dict["9. VTT Generation"] == True
 
-    # Optional stages should be disabled
+    # Optional stages should be disabled (or default enabled)
     assert stage_dict["1. Audio Preprocessing"] == False
+    assert stage_dict["4. Segment Splitting"] == True  # Defaults to True
     assert stage_dict["6. Text Polishing"] == False
     assert stage_dict["7. Timing Realignment"] == False
 
@@ -88,5 +87,5 @@ def test_display_pipeline_summary(capsys):
     assert "PIPELINE CONFIGURATION" in captured.out
     assert "Audio Preprocessing" in captured.out
     assert "Stammer Filter" in captured.out
-    assert "6 core stages (always-on)" in captured.out
+    assert "5 core stages (always-on)" in captured.out
     assert "optional stages" in captured.out
