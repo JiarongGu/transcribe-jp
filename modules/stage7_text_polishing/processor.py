@@ -23,12 +23,18 @@ def polish_segments_with_llm(segments, config):
         llm_config = config.get("llm", {})
 
         # Process in batches to reduce API calls
+        # batch_size <= 1 means process one-by-one (useful for Ollama and other local providers)
         batch_size = text_polishing_config.get("batch_size", 10)
         polished_segments = []
-        total_batches = (len(segments) + batch_size - 1) // batch_size
         total_segments = len(segments)
 
-        print(f"  - Processing {total_segments} segments in {total_batches} batches (batch size: {batch_size})")
+        # If batch_size is 0 or 1, process one-by-one
+        if batch_size <= 1:
+            batch_size = 1
+            print(f"  - Processing {total_segments} segments one-by-one (batch processing disabled)")
+        else:
+            total_batches = (len(segments) + batch_size - 1) // batch_size
+            print(f"  - Processing {total_segments} segments in {total_batches} batches (batch size: {batch_size})")
 
         def _print_progress(completed, total):
             """Print progress bar"""

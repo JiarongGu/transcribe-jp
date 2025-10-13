@@ -1,3 +1,67 @@
+## [2025-10-14 Current]
+
+### Added
+
+- **Pre-flight validation for Ollama installation**
+  - Added `validate_llm_requirements()` function in `core/config.py`
+  - Validates Ollama is installed before starting pipeline when using Ollama provider
+  - Shows clear error message with installation instructions if Ollama not found
+  - Only validates when LLM features are enabled (text polishing or LLM segment splitting)
+  - Skips validation when using external Ollama server (base_url specified)
+
+**Why this matters:**
+Ollama auto-installation doesn't work reliably on all systems. This change ensures users get a clear error message with manual installation instructions upfront, instead of failing mid-pipeline.
+
+**Error message includes:**
+- Which LLM features are enabled
+- Platform-specific installation instructions (Windows/macOS/Linux)
+- Alternative: Use external Ollama server
+- Alternative: Disable LLM features
+
+**Files changed:**
+- `core/config.py` - Added `validate_llm_requirements()` function
+- `transcribe_jp.py` - Call validation after loading config
+- `tests/unit/core/test_config.py` - Added 8 tests for validation logic
+- `docs/features/LLM_PROVIDERS.md` - Updated to reflect manual installation requirement
+
+**Test results:** 280/280 tests pass ✅
+
+---
+
+- **Batch processing can now be disabled for text polishing**
+  - Setting `text_polishing.batch_size` to `0` or `1` disables batching
+  - Processes segments one-by-one instead of in batches
+  - More reliable for Ollama and local LLM providers
+  - File: `modules/stage7_text_polishing/processor.py`
+
+**Why this matters:**
+Ollama and other local LLM providers work better with one-by-one processing rather than batch processing. This feature allows users to optimize text polishing for their chosen provider.
+
+**How to use:**
+```json
+{
+  "text_polishing": {
+    "enable": true,
+    "batch_size": 1  // Process one-by-one (recommended for Ollama)
+  }
+}
+```
+
+**Behavior:**
+- `batch_size > 1`: Process segments in batches (default: 10, good for cloud APIs)
+- `batch_size = 1` or `0`: Process segments one-by-one (recommended for Ollama)
+- Console message displays: "Processing X segments one-by-one (batch processing disabled)"
+
+**Files changed:**
+- `modules/stage7_text_polishing/processor.py` - Added batch_size <= 1 check
+- `docs/features/LLM_PROVIDERS.md` - Documented batch_size=1 for Ollama
+- `docs/core/CONFIGURATION.md` - Updated batch_size parameter documentation
+- `tests/unit/modules/stage7_text_polishing/test_processor.py` - Added 2 tests for batch_size 0 and 1
+
+**Test results:** 272/272 tests pass ✅
+
+---
+
 ## [2025-10-12 07:15]
 
 ### Changed

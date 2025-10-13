@@ -25,9 +25,9 @@ You can now choose from **three LLM providers**:
 
 ## Quick Start
 
-### Option 1: FREE Local (Ollama) - Recommended & AUTO-MANAGED
+### Option 1: FREE Local (Ollama) - Recommended
 
-**Zero setup required!** Ollama is automatically installed and managed for you.
+**Important:** Ollama must be installed manually before running transcribe-jp.
 
 ```json
 {
@@ -40,14 +40,28 @@ You can now choose from **three LLM providers**:
 }
 ```
 
-**What happens automatically:**
-1. ✅ Checks if Ollama is installed (installs if not)
-2. ✅ Starts Ollama server as subprocess
-3. ✅ Downloads model `llama3.2:3b` (~2GB)
-4. ✅ Ready to use!
+**Installation Steps:**
 
-**Manual installation (optional):**
-If auto-install fails, install manually: https://ollama.com/download
+1. **Install Ollama:**
+   - **Windows:** Download and run installer from https://ollama.com/download
+   - **macOS:** `brew install ollama` or download from https://ollama.com/download
+   - **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
+
+2. **Verify Installation:**
+   ```bash
+   ollama --version
+   ```
+
+3. **Run transcribe-jp:**
+   - The tool will automatically start Ollama server
+   - Download the specified model (~2GB for llama3.2:3b)
+   - Ready to use!
+
+**What happens automatically after installation:**
+1. ✅ Validates Ollama is installed before starting pipeline
+2. ✅ Starts Ollama server as subprocess
+3. ✅ Downloads model if not already available
+4. ✅ Ready to use!
 
 ### Option 2: Cloud API (Anthropic)
 
@@ -93,44 +107,53 @@ Use FREE Ollama for splitting, paid Claude for polishing:
 
 ## Detailed Provider Configuration
 
-### Ollama (Local, FREE, AUTO-MANAGED)
+### Ollama (Local, FREE, AUTO-MANAGED SERVER)
 
 **Benefits:**
 - ✅ Completely FREE
-- ✅ **Automatically installed and managed**
+- ✅ **Server automatically started and managed**
 - ✅ Private (no data leaves your machine)
 - ✅ Fast for local processing
 - ✅ No internet required (after model download)
 
 **Requirements:**
+- **Ollama must be installed manually** (see installation steps below)
 - GPU or CPU (2-4GB RAM recommended for llama3.2:3b)
 - Internet (for initial model download only)
 
-**Setup - AUTOMATIC:**
+**Setup - REQUIRED MANUAL INSTALLATION:**
 
-Just configure the model you want, the system handles everything:
+1. **Install Ollama** (one-time setup):
+   - **Windows:** https://ollama.com/download
+   - **macOS:** `brew install ollama`
+   - **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
 
-```json
-{
-  "llm": {
-    "provider": "ollama",
-    "ollama": {
-      "model": "llama3.2:3b"
-    }
-  }
-}
-```
+2. **Verify installation:**
+   ```bash
+   ollama --version
+   ```
 
-**What happens automatically:**
-1. Checks if Ollama is installed
-2. If not: Downloads and installs Ollama for your platform
-3. Starts Ollama server as subprocess
-4. Pulls the specified model (if not already downloaded)
-5. Ready to use!
+3. **Configure in config.json:**
+   ```json
+   {
+     "llm": {
+       "provider": "ollama",
+       "ollama": {
+         "model": "llama3.2:3b"
+       }
+     }
+   }
+   ```
 
-**Setup - MANUAL (optional):**
+**What happens automatically after you install Ollama:**
+1. ✅ Validates Ollama is installed (shows error if not)
+2. ✅ Starts Ollama server as subprocess
+3. ✅ Pulls the specified model (if not already downloaded)
+4. ✅ Ready to use!
 
-If you prefer manual control or already have Ollama running:
+**Setup - EXTERNAL SERVER (optional):**
+
+If you prefer to manage Ollama server yourself or use a remote server:
 
 1. **Install Ollama:**
    - Windows: https://ollama.com/download
@@ -182,6 +205,21 @@ If you prefer manual control or already have Ollama running:
 ```
 
 **Note:** `base_url` is optional. If omitted, Ollama is automatically managed as a subprocess.
+
+**Performance tip for Ollama:**
+
+Ollama works best with one-by-one processing rather than batch processing. Set `batch_size: 1` in text_polishing config:
+
+```json
+{
+  "text_polishing": {
+    "enable": true,
+    "batch_size": 1
+  }
+}
+```
+
+This disables batch processing and processes each segment individually, which is more reliable for local LLM providers like Ollama.
 
 ---
 
@@ -395,14 +433,22 @@ Approximate costs for processing **1 hour of audio transcription**:
 
 ## Troubleshooting
 
-### Ollama: Auto-installation failed
+### Ollama: "Ollama is not installed!" error
 
-**Problem:** Automatic Ollama installation failed
+**Problem:** You see an error that Ollama is not installed
 
 **Solution:**
-1. Check the error message in console
-2. Install manually: https://ollama.com/download
-3. After installation, the system will detect and use it automatically
+1. Install Ollama manually:
+   - **Windows:** https://ollama.com/download
+   - **macOS:** `brew install ollama`
+   - **Linux:** `curl -fsSL https://ollama.com/install.sh | sh`
+
+2. Verify installation:
+   ```bash
+   ollama --version
+   ```
+
+3. Restart your terminal and run transcribe-jp again
 
 **Alternative:** Use external Ollama server by specifying `base_url`:
 ```json
@@ -465,12 +511,29 @@ export ANTHROPIC_API_KEY=sk-ant-...
 - Wait and retry
 - Upgrade API tier
 
+### Ollama: Batch processing issues
+
+**Problem:** Batch processing fails or produces inconsistent results with Ollama
+
+**Solution:**
+Disable batch processing by setting `batch_size: 1`:
+```json
+{
+  "text_polishing": {
+    "batch_size": 1
+  }
+}
+```
+
+This forces one-by-one processing, which is more reliable for local LLM providers.
+
 ### Performance: Slow generation
 
 **Ollama:**
 - Use smaller model: `gemma2:2b`
 - Check GPU usage
 - Ensure adequate RAM
+- Disable batch processing: `batch_size: 1` (more reliable but slower)
 
 **Cloud APIs:**
 - Check internet connection
@@ -485,13 +548,13 @@ export ANTHROPIC_API_KEY=sk-ant-...
 A: Start with **Ollama** (free, auto-managed). Upgrade to Anthropic Claude if quality matters.
 
 **Q: Do I need to install Ollama manually?**
-A: No! Ollama is automatically installed and managed. Just specify the model in config.
+A: Yes! You must install Ollama manually before using it with transcribe-jp. Download from https://ollama.com/download.
 
 **Q: What happens on first run with Ollama?**
-A: The system automatically: (1) Installs Ollama if needed, (2) Starts server, (3) Downloads model (~2GB for llama3.2:3b).
+A: The system automatically: (1) Validates Ollama is installed, (2) Starts Ollama server, (3) Downloads model (~2GB for llama3.2:3b).
 
 **Q: Can I use my existing Ollama installation?**
-A: Yes! If Ollama is already installed, the system detects and uses it. Or specify `base_url` to use external server.
+A: Yes! transcribe-jp detects and uses your existing Ollama installation. Or specify `base_url` to use an external server.
 
 **Q: Can I use different providers for different stages?**
 A: Yes! Use stage-specific override. See "Stage-Specific Provider Override" above.

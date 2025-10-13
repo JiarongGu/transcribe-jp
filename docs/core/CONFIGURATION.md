@@ -353,7 +353,8 @@ LLM-based text refinement for natural Japanese.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `enable` | boolean | `true` | Enable LLM text polishing |
-| `batch_size` | integer | `10` | Segments per API call (reduces costs) |
+| `batch_size` | integer | `10` | Segments per API call. Set to `1` or `0` to disable batching (process one-by-one, recommended for Ollama) |
+| `llm_provider` | string | `null` | Override global LLM provider for this stage (optional) |
 
 **What it does:**
 - Fixes grammar and particle usage
@@ -364,6 +365,7 @@ LLM-based text refinement for natural Japanese.
 **Notes:**
 - Requires LLM API key (see `llm` section)
 - Uses batching to reduce API costs
+- Set `batch_size: 1` for Ollama and local LLM providers (more reliable)
 - Gracefully falls back to original text on failure
 
 ---

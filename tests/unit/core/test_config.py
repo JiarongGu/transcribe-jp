@@ -4,7 +4,8 @@ import pytest
 import json
 import tempfile
 from pathlib import Path
-from core.config import load_config, deep_merge
+from unittest.mock import patch
+from core.config import load_config, deep_merge, validate_llm_requirements
 
 
 class TestLoadConfig:
@@ -274,3 +275,132 @@ class TestConfigValidation:
 
         assert config["audio_processing"]["enable"] is True
         assert config["whisper"]["condition_on_previous_text"] is False
+
+
+class TestValidateLLMRequirements:
+    """Test LLM requirements validation"""
+
+    def test_no_llm_features_enabled(self):
+        """Test validation passes when no LLM features are enabled"""
+        config = {
+            "text_polishing": {"enable": False},
+            "segment_splitting": {"enable_llm": False},
+            "llm": {"provider": "ollama"}
+        }
+
+        assert validate_llm_requirements(config) is True
+
+    @patch('shutil.which')
+    def test_ollama_provider_installed(self, mock_which):
+        """Test validation passes when Ollama is installed"""
+        mock_which.return_value = "/usr/local/bin/ollama"
+
+        config = {
+            "text_polishing": {"enable": True},
+            "llm": {
+                "provider": "ollama",
+                "ollama": {"model": "llama3.2:3b"}
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is True
+        mock_which.assert_called_once_with("ollama")
+
+    @patch('shutil.which')
+    def test_ollama_provider_not_installed(self, mock_which, capsys):
+        """Test validation fails when Ollama is not installed"""
+        mock_which.return_value = None
+
+        config = {
+            "text_polishing": {"enable": True},
+            "llm": {
+                "provider": "ollama",
+                "ollama": {"model": "llama3.2:3b"}
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is False
+
+        captured = capsys.readouterr()
+        assert "ERROR: Ollama is not installed!" in captured.out
+        assert "https://ollama.com/download" in captured.out
+
+    def test_ollama_external_base_url(self):
+        """Test validation passes when using external Ollama server"""
+        config = {
+            "text_polishing": {"enable": True},
+            "llm": {
+                "provider": "ollama",
+                "ollama": {
+                    "base_url": "http://localhost:11434",
+                    "model": "llama3.2:3b"
+                }
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is True
+
+    def test_anthropic_provider(self):
+        """Test validation passes for Anthropic provider"""
+        config = {
+            "text_polishing": {"enable": True},
+            "llm": {
+                "provider": "anthropic",
+                "anthropic": {"api_key": "test-key"}
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is True
+
+    @patch('shutil.which')
+    def test_segment_splitting_llm_enabled(self, mock_which):
+        """Test validation checks when segment_splitting.enable_llm is True"""
+        mock_which.return_value = "/usr/local/bin/ollama"
+
+        config = {
+            "text_polishing": {"enable": False},
+            "segment_splitting": {"enable_llm": True},
+            "llm": {
+                "provider": "ollama",
+                "ollama": {"model": "llama3.2:3b"}
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is True
+        mock_which.assert_called_once_with("ollama")
+
+    @patch('shutil.which')
+    def test_both_llm_features_enabled(self, mock_which, capsys):
+        """Test validation message shows both features when enabled"""
+        mock_which.return_value = None
+
+        config = {
+            "text_polishing": {"enable": True},
+            "segment_splitting": {"enable_llm": True},
+            "llm": {
+                "provider": "ollama",
+                "ollama": {"model": "llama3.2:3b"}
+            }
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is False
+
+        captured = capsys.readouterr()
+        assert "Text Polishing (Stage 7)" in captured.out
+        assert "LLM Segment Splitting (Stage 4)" in captured.out
+
+    def test_missing_llm_config(self):
+        """Test validation handles missing llm config gracefully"""
+        config = {
+            "text_polishing": {"enable": False},
+            "segment_splitting": {"enable_llm": False}
+        }
+
+        result = validate_llm_requirements(config)
+        assert result is True

@@ -23,7 +23,7 @@ import torch
 import sys
 import argparse
 
-from core.config import load_config
+from core.config import load_config, validate_llm_requirements
 from core.pipeline import run_pipeline
 from core.display import display_pipeline_summary
 from shared.text_utils import check_ffmpeg
@@ -104,6 +104,11 @@ Supported formats: WAV, MP3, M4A, AAC, FLAC, OGG, MP4, AVI, MKV, MOV, and more
     # Show config location
     if "_config_path" in config:
         print(f"Loaded config from: {config['_config_path']}")
+
+    # Validate LLM requirements (check if Ollama is installed when needed)
+    print("\nValidating LLM requirements...")
+    if not validate_llm_requirements(config):
+        sys.exit(1)
 
     # Setup output directory
     current_dir = Path.cwd()

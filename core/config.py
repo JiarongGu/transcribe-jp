@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+import shutil
 from pathlib import Path
 from typing import Any, Dict
 
@@ -108,3 +109,100 @@ def load_config():
     except Exception as e:
         print(f"ERROR: Failed to load config.json: {e}")
         sys.exit(1)
+
+
+def validate_llm_requirements(config: Dict[str, Any]) -> bool:
+    """
+    Validate LLM provider requirements before starting the pipeline.
+    Check if Ollama is installed when using ollama provider.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if all requirements met, False otherwise
+    """
+    llm_config = config.get("llm", {})
+    provider = llm_config.get("provider", "")
+
+    # Check if any LLM-dependent features are enabled
+    text_polishing_enabled = config.get("text_polishing", {}).get("enable", False)
+    segment_splitting_llm = config.get("segment_splitting", {}).get("enable_llm", False)
+
+    # If no LLM features enabled, skip validation
+    if not text_polishing_enabled and not segment_splitting_llm:
+        return True
+
+    # If provider is Ollama, check if it's installed
+    if provider == "ollama":
+        ollama_config = llm_config.get("ollama", {})
+        base_url = ollama_config.get("base_url")
+
+        # If base_url is specified, user is managing Ollama externally
+        if base_url:
+            print(f"  - Using external Ollama server at {base_url}")
+            return True
+
+        # Auto-managed mode: Check if Ollama is installed
+        ollama_exe = shutil.which("ollama")
+
+        if not ollama_exe:
+            print("\n" + "="*70)
+            print("ERROR: Ollama is not installed!")
+            print("="*70)
+            print("\nYou are using LLM features with Ollama provider, but Ollama is not installed.")
+            print("\nLLM features enabled in your config:")
+            if text_polishing_enabled:
+                print("  - Text Polishing (Stage 7)")
+            if segment_splitting_llm:
+                print("  - LLM Segment Splitting (Stage 4)")
+
+            print("\n" + "-"*70)
+            print("SOLUTION: Install Ollama manually")
+            print("-"*70)
+            print("\nWindows:")
+            print("  1. Download: https://ollama.com/download")
+            print("  2. Run the installer")
+            print("  3. Restart your terminal")
+
+            print("\nmacOS:")
+            print("  Option 1: brew install ollama")
+            print("  Option 2: Download from https://ollama.com/download")
+
+            print("\nLinux:")
+            print("  curl -fsSL https://ollama.com/install.sh | sh")
+
+            print("\n" + "-"*70)
+            print("ALTERNATIVE: Use external Ollama server")
+            print("-"*70)
+            print("\nIf you have Ollama running on another machine, add this to config.local.json:")
+            print("""
+{
+  "llm": {
+    "provider": "ollama",
+    "ollama": {
+      "base_url": "http://localhost:11434",
+      "model": "llama3.2:3b"
+    }
+  }
+}""")
+
+            print("\n" + "-"*70)
+            print("ALTERNATIVE: Disable LLM features")
+            print("-"*70)
+            print("\nIf you don't want to use LLM features, disable them in config.json:")
+            print("""
+{
+  "text_polishing": {
+    "enable": false
+  },
+  "segment_splitting": {
+    "enable_llm": false
+  }
+}""")
+            print("\n" + "="*70)
+            return False
+
+        print(f"  - Ollama found: {ollama_exe}")
+
+    return True

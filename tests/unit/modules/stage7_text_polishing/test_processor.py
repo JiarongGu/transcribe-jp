@@ -494,6 +494,78 @@ class TestConfigValidation:
         # Expect 2 API calls (10 + 5)
         assert mock_client.messages.create.call_count == 2
 
+    @patch('anthropic.Anthropic')
+    def test_batch_size_zero_disables_batching(self, mock_anthropic_class, sample_config, capsys):
+        """Test that batch_size=0 disables batching and processes one-by-one"""
+        config = sample_config.copy()
+        config["text_polishing"]["enable"] = True
+        config["text_polishing"]["batch_size"] = 0  # Disable batching
+        config["llm"] = {
+            "provider": "anthropic",
+            "anthropic_api_key": "test-key"
+        }
+
+        # Create 3 segments (should process one-by-one, not in a batch)
+        segments = [
+            (0.0, 1.0, 'テキスト1', []),
+            (1.0, 2.0, 'テキスト2', []),
+            (2.0, 3.0, 'テキスト3', [])
+        ]
+
+        mock_client = MagicMock()
+        mock_anthropic_class.return_value = mock_client
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock()]
+        mock_response.content[0].text = json.dumps({"polished": ["整形後"]})
+        mock_client.messages.create.return_value = mock_response
+
+        result = polish_segments_with_llm(segments, config)
+
+        # Should call API 3 times (once per segment)
+        assert mock_client.messages.create.call_count == 3
+
+        # Check console output for "one-by-one" message
+        captured = capsys.readouterr()
+        assert 'one-by-one' in captured.out
+        assert 'batch processing disabled' in captured.out
+
+    @patch('anthropic.Anthropic')
+    def test_batch_size_one_disables_batching(self, mock_anthropic_class, sample_config, capsys):
+        """Test that batch_size=1 disables batching and processes one-by-one"""
+        config = sample_config.copy()
+        config["text_polishing"]["enable"] = True
+        config["text_polishing"]["batch_size"] = 1  # Disable batching
+        config["llm"] = {
+            "provider": "anthropic",
+            "anthropic_api_key": "test-key"
+        }
+
+        # Create 3 segments (should process one-by-one, not in a batch)
+        segments = [
+            (0.0, 1.0, 'テキスト1', []),
+            (1.0, 2.0, 'テキスト2', []),
+            (2.0, 3.0, 'テキスト3', [])
+        ]
+
+        mock_client = MagicMock()
+        mock_anthropic_class.return_value = mock_client
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock()]
+        mock_response.content[0].text = json.dumps({"polished": ["整形後"]})
+        mock_client.messages.create.return_value = mock_response
+
+        result = polish_segments_with_llm(segments, config)
+
+        # Should call API 3 times (once per segment)
+        assert mock_client.messages.create.call_count == 3
+
+        # Check console output for "one-by-one" message
+        captured = capsys.readouterr()
+        assert 'one-by-one' in captured.out
+        assert 'batch processing disabled' in captured.out
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
