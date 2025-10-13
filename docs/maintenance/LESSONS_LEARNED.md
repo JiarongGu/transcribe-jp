@@ -690,11 +690,11 @@ Before making major changes, ask:
 
 ## See Also
 
-- [AI_GUIDE.md](AI_GUIDE.md) - AI assistant guidelines (references this doc)
-- [SESSIONS.md](SESSIONS.md) - Detailed session history
-- [CHANGELOG.md](CHANGELOG.md) - What changed and when
-- [ARCHITECTURE.md](core/ARCHITECTURE.md) - System design
-- [PIPELINE_STAGES.md](core/PIPELINE_STAGES.md) - Pipeline details
+- [AI_GUIDE.md](../AI_GUIDE.md) - AI assistant guidelines (references this doc)
+- [SESSIONS.md](../SESSIONS.md) - Detailed session history
+- [CHANGELOG.md](../CHANGELOG.md) - What changed and when
+- [ARCHITECTURE.md](../core/ARCHITECTURE.md) - System design
+- [PIPELINE_STAGES.md](../core/PIPELINE_STAGES.md) - Pipeline details
 
 ---
 
