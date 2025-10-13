@@ -104,7 +104,7 @@ JSON形式で、整形後のテキストを配列で返してください。
 
             except Exception as e:
                 # Batch failed, try individually
-                print(f"\r    Batch {batch_num} failed, retrying individually...", end="", flush=True)
+                print(f"\r    Batch {batch_num} failed ({type(e).__name__}: {str(e)[:80]}), retrying individually...", end="", flush=True)
                 # Try polishing one-by-one
                 one_by_one_success = 0
                 for j, seg in enumerate(batch):
@@ -158,7 +158,7 @@ JSON形式で、整形後のテキストを配列で返してください。
                 if one_by_one_success > 0:
                     print(f"    ({one_by_one_success}/{len(batch)} succeeded in retry)")
                 else:
-                    print(f"    (batch failed)")
+                    print(f"    (batch failed - all retries failed)")
 
         print(f"  - Completed: {len(polished_segments)}/{total_segments} segments polished")
         return polished_segments
