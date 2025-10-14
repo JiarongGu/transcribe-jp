@@ -220,11 +220,42 @@ class OllamaProvider(LLMProvider):
             # Check if it's a model not found error
             if e.response.status_code == 404:
                 raise RuntimeError(f"Model '{self.model}' not found on Ollama server. Please pull it: ollama pull {self.model}")
-            raise RuntimeError(f"Ollama API request failed: {e}")
+            raise RuntimeError(f"Ollama API request failed (HTTP {e.response.status_code}): {e}")
         except self.requests.exceptions.Timeout:
-            raise RuntimeError(f"Ollama request timed out after {self.timeout}s. Try increasing 'llm.ollama.timeout' in config")
+            raise RuntimeError(
+                f"Ollama request timed out after {self.timeout}s.\n"
+                f"  Possible causes:\n"
+                f"  - Model '{self.model}' is too slow (try smaller model or increase timeout)\n"
+                f"  - Server is under heavy load\n"
+                f"  - Using CPU instead of GPU (check Ollama logs)\n"
+                f"  Solution: Increase timeout in config: llm.timeout = 60 or more"
+            )
+        except self.requests.exceptions.ConnectionError as e:
+            raise RuntimeError(
+                f"Cannot connect to Ollama server at {self.base_url}.\n"
+                f"  Possible causes:\n"
+                f"  - Ollama server not running (start with: ollama serve)\n"
+                f"  - Wrong base_url in config (check llm.ollama.base_url)\n"
+                f"  - Server crashed (check Ollama logs)\n"
+                f"  Solution: Verify Ollama is running and accessible"
+            )
+        except self.requests.exceptions.ChunkedEncodingError:
+            raise RuntimeError(
+                f"Ollama server connection interrupted mid-response.\n"
+                f"  Possible causes:\n"
+                f"  - Server crashed during generation\n"
+                f"  - Network issues\n"
+                f"  - Out of memory (model too large for available VRAM/RAM)\n"
+                f"  Solution: Check Ollama server logs for errors"
+            )
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Invalid JSON response from Ollama server.\n"
+                f"  Server may have returned an error message instead of JSON.\n"
+                f"  Solution: Check Ollama server logs for details"
+            )
         except Exception as e:
-            raise RuntimeError(f"Ollama API request failed: {e}")
+            raise RuntimeError(f"Ollama API request failed: {type(e).__name__}: {e}")
 
     def cleanup(self):
         """Stop managed Ollama server if running"""
