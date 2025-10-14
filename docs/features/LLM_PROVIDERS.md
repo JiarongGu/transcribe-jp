@@ -221,6 +221,13 @@ If you prefer to manage Ollama server yourself or use a remote server:
 - If you see "Ollama request timed out" errors, increase the timeout
 - You can also override timeout per stage (see "Stage-Specific Timeout Override" below)
 
+**max_tokens tips:**
+- `max_tokens` controls the maximum response length from the LLM
+- **For batch_size=1:** 1024 tokens is sufficient (single segment response)
+- **For batch_size=10:** May need 2048-4096 tokens (10 segments in JSON array)
+- If you see incomplete JSON responses or cut-off text, increase `max_tokens`
+- **Recommendation:** Use `batch_size: 1` for Ollama (more reliable, avoids max_tokens concerns)
+
 **Performance tip for Ollama:**
 
 Ollama works best with one-by-one processing rather than batch processing. Set `batch_size: 1` in text_polishing config:
