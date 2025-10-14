@@ -1,3 +1,57 @@
+## [2025-10-15 TBD] - Refactored Stage 4 to Include LLM Intelligent Splitting
+
+### Changed
+
+- **LLM intelligent splitting moved from Stage 5 to Stage 4 where it belongs**
+  - Created new processor for Stage 4: `modules/stage4_segment_splitting/processor.py`
+  - Stage 4 now handles both basic rule-based splitting AND LLM intelligent splitting
+  - Removed misplaced LLM splitting logic from Stage 5 (hallucination filtering)
+  - Pipeline now shows correct stage when applying LLM splitting
+  - Updated pipeline to use new `split_segments()` function
+  - Files: `modules/stage4_segment_splitting/processor.py` (new), `core/pipeline.py`, `modules/stage5_hallucination_filtering/processor.py`
+
+**The problem:**
+User observed "Applying LLM intelligent splitting..." message during Stage 5 (Hallucination Filtering), which was confusing because:
+1. Stage 4 is labeled "Segment Splitting" but only did basic splitting
+2. LLM splitting happened in Stage 5 (hallucination filtering) which is conceptually unrelated
+3. This violated separation of concerns and made the pipeline flow unclear
+
+**Why this matters:**
+Each stage should have a clear, single responsibility. Hallucination filtering (Stage 5) should not be doing segment splitting. This refactoring makes the pipeline clearer and more maintainable.
+
+**The solution:**
+Created `modules/stage4_segment_splitting/processor.py` that handles:
+1. **Basic splitting** (rule-based line length splitting) - always runs if stage enabled
+2. **LLM intelligent splitting** (optional) - runs after basic splitting if `enable_llm: true`
+
+Both splitting operations now happen in Stage 4, removing all splitting logic from Stage 5.
+
+**Impact:**
+- ✅ Clearer pipeline organization - each stage has single responsibility
+- ✅ Correct stage labeling - "Segment Splitting" message appears during Stage 4
+- ✅ Better separation of concerns - Stage 5 only does hallucination filtering
+- ✅ More maintainable code - splitting logic in one place
+
+**Files modified:**
+- `modules/stage4_segment_splitting/processor.py` (new, 136 lines)
+- `modules/stage4_segment_splitting/__init__.py` (exports new processor)
+- `core/pipeline.py` (updated to use new split_segments function)
+- `modules/stage5_hallucination_filtering/processor.py` (removed 92 lines of LLM splitting logic)
+
+**Additional changes:**
+- **Improved text polishing prompts for transcription fidelity**
+  - Emphasizes this is audio transcription that must preserve spoken content
+  - Instructs LLM to make minimal changes (punctuation, particles, obvious errors only)
+  - Explicitly forbids adding words the speaker didn't say
+  - Preserves colloquial expressions and speech patterns (「〜だよ」「〜じゃん」)
+  - Keeps stutters and hesitations (they're part of the actual speech)
+  - Added anti-verbosity instruction: "JSONのみ出力してください。説明や理由は不要です。"
+  - Files: `modules/stage7_text_polishing/processor.py` (lines 68-90, 134-156)
+
+**Test results:** Pending (pytest not installed in current environment)
+
+---
+
 ## [2025-10-14 19:26] - Fixed Text Polishing JSON Response Type Handling
 
 ### Fixed

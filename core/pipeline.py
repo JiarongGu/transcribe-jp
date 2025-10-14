@@ -35,7 +35,7 @@ def run_pipeline(media_path, model, output_dir, config):
     from modules.stage1_audio_preprocessing.processor import preprocess_audio_volume
     from modules.stage2_whisper_transcription.processor import transcribe_audio
     from modules.stage3_segment_merging.processor import merge_incomplete_segments
-    from modules.stage4_segment_splitting.basic_splitter import split_segment_with_timing
+    from modules.stage4_segment_splitting.processor import split_segments
     from modules.stage5_hallucination_filtering.processor import filter_hallucinations
     from modules.stage7_text_polishing.processor import polish_segments_with_llm
     from modules.stage8_final_cleanup.processor import apply_final_cleanup
@@ -78,12 +78,7 @@ def run_pipeline(media_path, model, output_dir, config):
         splitting_config = config.get("segment_splitting", {})
         if splitting_config.get("enable", True):
             print("\n[Stage 4/9] Segment Splitting")
-            print("  - Splitting segments by line length...")
-            all_sub_segments = []
-            for segment in merged_segments:
-                sub_segments = split_segment_with_timing(segment, config)
-                all_sub_segments.extend(sub_segments)
-            print(f"    {len(all_sub_segments)} segments after splitting")
+            all_sub_segments = split_segments(merged_segments, config, model, processed_path)
         else:
             print("\n[Stage 4/9] Segment Splitting (Skipped)")
             # Convert merged segments to the expected format (start, end, text, words)

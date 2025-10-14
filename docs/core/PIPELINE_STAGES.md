@@ -100,10 +100,14 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 **Optional:** Set `enable: false` to skip this stage entirely
 
 **Operations:**
-- Split segments by max line length
-- Optional LLM-assisted intelligent splitting
-- Preserve word timestamps through matching
-- Optional re-validation with Whisper
+1. **Basic splitting** (rule-based, always runs if stage enabled):
+   - Split segments by max line length
+   - Use primary breaks (。？！) and secondary breaks (、わねよ)
+   - Preserve word timestamps through matching
+2. **LLM intelligent splitting** (optional, runs after basic splitting if `enable_llm: true`):
+   - Uses LLM to find natural linguistic boundaries
+   - Enhances basic splitting with context-aware decisions
+   - Optional re-validation with Whisper for accuracy
 
 **Configuration:**
 ```json
@@ -126,7 +130,7 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 **Module:** [modules/stage5_hallucination_filtering/](../modules/stage5_hallucination_filtering/)
 **Purpose:** Remove transcription noise and detect hallucinations
 
-**Key Concept:** This stage acts as a **noise filter** for the transcript, removing bad/unreliable data before later stages refine the valid content.
+**Key Concept:** This stage acts as a **noise filter** for the transcript, removing bad/unreliable data before later stages refine the valid content. This stage ONLY filters - splitting happens in Stage 4.
 
 **Operations:**
 - **Consecutive duplicates:** Merge repeated segments (common hallucination pattern)

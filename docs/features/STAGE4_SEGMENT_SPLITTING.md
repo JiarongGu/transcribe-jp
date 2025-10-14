@@ -24,6 +24,8 @@ Segment Splitting breaks long subtitle segments into shorter, more readable line
 
 ### Two-Step Process
 
+**Note:** As of 2025-10-15, both splitting operations happen within Stage 4. Previously, LLM splitting was executed during Stage 5 (Hallucination Filtering), which was architecturally incorrect. Both operations now properly execute in Stage 4 where they belong.
+
 #### 1. Rule-Based Splitting (Always Active)
 Splits at punctuation and grammatical markers.
 
@@ -301,4 +303,4 @@ python -m pytest tests/unit/modules/stage4_segment_splitting/ -v
 
 ---
 
-*Last updated: 2025-10-12*
+*Last updated: 2025-10-15*
