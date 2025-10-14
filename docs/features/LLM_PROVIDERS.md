@@ -193,10 +193,13 @@ If you prefer to manage Ollama server yourself or use a remote server:
 
 | Model | Size | RAM | Speed | Quality |
 |-------|------|-----|-------|---------|
+| `qwen3:1.7b` | 1GB | 3GB | Very Fast | Good (Qwen3 is excellent for Japanese) |
 | `llama3.2:3b` | 2GB | 4GB | Fast | Good |
-| `gemma2:2b` | 1.6GB | 3GB | Very Fast | Fair |
-| `qwen2.5:3b` | 2.3GB | 4GB | Fast | Good (better Japanese) |
+| `qwen3:4b-instruct` | 2.5GB | 4GB | Fast | Excellent (best for instructions) |
+| `qwen3:8b-instruct` | 5.2GB | 8GB | Medium | Excellent (better instruction following) |
 | `llama3.1:8b` | 4.7GB | 8GB | Medium | Excellent |
+
+**Note:** Use `-instruct` models for text polishing (better at following instructions). Base models without `-instruct` are for general text generation.
 
 **Configuration options:**
 

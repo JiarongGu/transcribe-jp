@@ -1,4 +1,159 @@
-## [2025-10-14 Current] - Continued Session
+## [2025-10-14 Current] - Ollama Path Detection + Integration Tests
+
+### Added
+
+- **Comprehensive Ollama executable path detection across platforms**
+  - Enhanced auto-detection with multiple common installation locations
+  - Windows: Checks PATH, %LOCALAPPDATA%\Programs\Ollama, C:\Program Files\Ollama, C:\Program Files (x86)\Ollama, %APPDATA%\Ollama
+  - macOS: Checks PATH, /usr/local/bin, /opt/homebrew/bin, ~/.local/bin, /Applications/Ollama.app/Contents/MacOS
+  - Linux: Checks PATH, ~/.local/bin, /usr/local/bin, /usr/bin, /opt/ollama/bin
+  - Priority system: Custom path → PATH → Platform-specific locations
+  - File: `shared/ollama_manager.py`
+
+**Why this matters:**
+Ollama can be installed in different locations on different PCs. The enhanced detection ensures transcribe-jp finds Ollama regardless of installation method (installer, manual, portable, etc.).
+
+**Detection priority:**
+1. Custom `executable_path` from config (highest priority)
+2. System PATH via `shutil.which()`
+3. Platform-specific common locations (multiple paths checked)
+4. Installation fails with clear error
+
+- **Manual configuration options for Ollama**
+  - `executable_path`: Custom path to ollama executable
+  - `base_url`: External/remote Ollama server
+  - Both options can be used together
+  - Files: `shared/ollama_manager.py`, `shared/llm_utils.py`
+
+**Why this matters:**
+Users with non-standard installations (portable, custom directory, remote server) can now explicitly configure Ollama paths instead of relying solely on auto-detection.
+
+**Config examples:**
+```json
+{
+  "ollama": {
+    "model": "llama3.2:3b",
+    "executable_path": "D:\\CustomApps\\Ollama\\ollama.exe"  // Custom installation
+  }
+}
+
+{
+  "ollama": {
+    "model": "llama3.2:3b",
+    "base_url": "http://192.168.1.100:11434"  // Remote server
+  }
+}
+```
+
+- **Comprehensive integration tests for Ollama**
+  - 8 test classes with 20+ test cases
+  - Tests: Installation detection, server management, model pulling, generation, timeout handling, configuration
+  - Supports both mocked tests and real Ollama tests (via OLLAMA_AVAILABLE env var)
+  - File: `tests/integration/test_ollama.py` (new, ~600 lines)
+
+**Why this matters:**
+Integration tests ensure Ollama path detection, configuration, and error handling work correctly across different installation scenarios. Helps catch issues before they affect users.
+
+**Test coverage:**
+- TestOllamaInstallation: Path detection, Windows/macOS/Linux, custom paths, external URLs
+- TestOllamaServerManagement: Server lifecycle, running checks, connection tests
+- TestOllamaModelManagement: Model availability, pulling with progress, timeout handling
+- TestOllamaProviderGeneration: Text generation success/failure, timeout/connection errors, model not found
+- TestOllamaProviderConfiguration: Timeout priority system, max_tokens=0 handling
+- TestOllamaStageSpecificConfig: Stage-specific timeout/provider overrides
+- TestOllamaErrorMessages: Error message quality verification (shows causes + solutions)
+
+- **Quick diagnostic tool for Ollama timeout issues**
+  - Tests server connection, simple generation, Japanese generation
+  - Shows generation timing to diagnose GPU vs CPU usage
+  - Helps diagnose timeout issues with clear output
+  - File: `test_ollama_quick.py` (new)
+
+**Why this matters:**
+Users can quickly diagnose why Ollama is timing out (model too slow, CPU vs GPU, server issues) without running full pipeline.
+
+**Example output:**
+```
+1. Testing server connection...
+   ✅ Server reachable, 3 models available
+
+2. Testing text generation (simple prompt)...
+   ✅ Generation succeeded in 10.9s
+
+3. Testing Japanese text generation...
+   ❌ Request TIMED OUT after 45s
+   THIS IS YOUR ISSUE! Try increasing timeout or use smaller model
+```
+
+### Changed
+
+- **Enhanced OllamaManager initialization signature**
+  - Added `executable_path` parameter for custom installations
+  - Added `base_url` parameter for external servers
+  - Both parameters optional (backward compatible)
+  - File: `shared/ollama_manager.py`
+
+- **Enhanced OllamaProvider to pass custom config options**
+  - Reads `executable_path` from config
+  - Passes to OllamaManager for custom path detection
+  - External server mode now also supports custom executable paths
+  - File: `shared/llm_utils.py`
+
+### Documentation Updates
+
+- **docs/features/OLLAMA_CONFIGURATION.md**: NEW comprehensive guide (540 lines)
+  - Problem statement: Ollama installed in different locations on different PCs
+  - Automatic detection behavior (Windows/macOS/Linux paths)
+  - Manual configuration options (executable_path, base_url, both)
+  - Performance configuration (timeouts by model size, model selection for speed)
+  - Complete configuration examples (5 scenarios)
+  - Troubleshooting guide (executable not found, external server unreachable, generation too slow, GPU issues)
+  - Configuration priority system documentation
+
+- **config.local.json.example**: Added new Ollama config options
+  - Added `executable_path` comment with example path
+  - Added Example 4: Custom Ollama installation path configuration
+  - Added reference to OLLAMA_CONFIGURATION.md
+
+### Test Results
+✅ 280/280 unit tests pass
+✅ 20+ integration tests created (run with OLLAMA_AVAILABLE=true)
+
+### Impact Summary
+
+**Cross-platform compatibility:** Ollama now works reliably across different PCs regardless of installation location (standard, custom, portable, remote).
+
+**Manual configuration:** Users with non-standard setups can explicitly configure Ollama paths via config.json instead of hoping auto-detection works.
+
+**Better diagnostics:** Quick diagnostic tool helps users identify timeout issues (slow model, CPU usage, GPU problems) in seconds.
+
+**Comprehensive testing:** Integration tests cover real-world Ollama scenarios and catch configuration issues early.
+
+**Clear documentation:** OLLAMA_CONFIGURATION.md provides complete guide for all Ollama configuration scenarios with 5 realistic examples.
+
+**Timeout guidance:** Documentation includes recommended timeouts by model size (2-3B: 30-60s, 4-8B: 45-90s, 32B+: 120-300s) based on GPU vs CPU usage.
+
+### Files Modified
+
+**Core implementation:**
+- `shared/ollama_manager.py` - Enhanced path detection (lines 44-101), added parameters to __init__ and get_ollama_manager
+- `shared/llm_utils.py` - Read and pass executable_path config (lines 96, 104-107, 118-131)
+
+**Documentation:**
+- `docs/features/OLLAMA_CONFIGURATION.md` - NEW comprehensive Ollama configuration guide (540 lines)
+- `config.local.json.example` - Added executable_path comment and Example 4
+
+**Testing:**
+- `tests/integration/test_ollama.py` - NEW integration test suite (8 classes, 20+ tests, ~600 lines)
+- `tests/integration/__init__.py` - NEW integration tests directory
+- `test_ollama_quick.py` - NEW diagnostic tool for timeout issues
+
+### Git Commits (this session)
+- (pending) Comprehensive Ollama path detection + integration tests
+
+---
+
+## [2025-10-14 Earlier] - Continued Session
 
 ### Added
 

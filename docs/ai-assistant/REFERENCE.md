@@ -131,7 +131,9 @@ python main.py input.mp4 --stages 1-6
     "temperature": 0.0,
     "timeout": 60,
     "ollama": {
-      "model": "llama3.2:3b"
+      "model": "llama3.2:3b",
+      "executable_path": "D:\\CustomPath\\ollama.exe",  // Optional: Custom Ollama path
+      "base_url": "http://localhost:11434"  // Optional: External Ollama server
     }
   },
   "text_polishing": {
@@ -147,11 +149,19 @@ python main.py input.mp4 --stages 1-6
 - `timeout` - Request timeout (stage > provider > common > default 30s)
 - `llm_timeout` - Stage-specific timeout override (e.g., 180s for text polishing with large models)
 - `batch_size: 1` - Recommended for Ollama (more reliable than batching)
+- `executable_path` - Custom path to ollama executable (for non-standard installations)
+- `base_url` - External Ollama server URL (skips auto-management)
 
 **Timeout guidelines:**
 - 2-3B models: 30-60s
 - 7-8B models: 60-120s
 - 32B+ models: 120-300s
+
+**Ollama path detection** (automatic):
+- Windows: PATH, %LOCALAPPDATA%\Programs\Ollama, C:\Program Files\Ollama, C:\Program Files (x86)\Ollama, %APPDATA%\Ollama
+- macOS: PATH, /usr/local/bin, /opt/homebrew/bin, ~/.local/bin, /Applications/Ollama.app/Contents/MacOS
+- Linux: PATH, ~/.local/bin, /usr/local/bin, /usr/bin, /opt/ollama/bin
+- See [OLLAMA_CONFIGURATION.md](../features/OLLAMA_CONFIGURATION.md) for advanced configuration
 
 ---
 
@@ -187,9 +197,11 @@ modules/
 
 ### Tests
 
-- **Unit:** `tests/unit/` (261 tests)
+- **Unit:** `tests/unit/` (280 tests)
+- **Integration:** `tests/integration/` (20+ tests, requires OLLAMA_AVAILABLE=true)
 - **E2E:** `tests/e2e/` (4 suites)
 - **Test audio:** `tests/e2e/test_media/japanese_test.mp3` (27s, 167KB)
+- **Diagnostic:** `test_ollama_quick.py` (Ollama timeout troubleshooting)
 
 ### Documentation
 
@@ -204,7 +216,8 @@ docs/
 │   ├── CONFIGURATION.md               # Config reference
 │   └── PIPELINE_STAGES.md             # Stage details
 ├── features/
-│   └── LLM_PROVIDERS.md               # LLM configuration guide
+│   ├── LLM_PROVIDERS.md               # LLM configuration guide
+│   └── OLLAMA_CONFIGURATION.md        # Advanced Ollama configuration
 └── maintenance/
     ├── LESSONS_LEARNED.md             # Knowledge database
     ├── DOCUMENTATION_SCALING_STRATEGY.md
@@ -316,7 +329,7 @@ class Segment:
 
 ## Test Coverage Stats
 
-**Current:** 285 tests (280 unit + 4 E2E + 1 smoke)
+**Current:** 300+ tests (280 unit + 20+ integration + 4 E2E + 1 smoke)
 
 **By module:**
 - Stage 1: Preprocessing
@@ -349,12 +362,13 @@ START HERE
     └── ai-assistant/REFERENCE.md       # Quick reference (this file)
 
 DETAILED DOCS
-├── core/ARCHITECTURE.md         # System design, 9-stage pipeline
-├── core/CONFIGURATION.md        # Full config reference
-├── core/PIPELINE_STAGES.md      # Stage-by-stage details
-├── features/LLM_PROVIDERS.md    # LLM provider configuration
-├── CHANGELOG.md                 # Recent changes, git history
-└── SESSIONS.md                  # Development history, context
+├── core/ARCHITECTURE.md              # System design, 9-stage pipeline
+├── core/CONFIGURATION.md             # Full config reference
+├── core/PIPELINE_STAGES.md           # Stage-by-stage details
+├── features/LLM_PROVIDERS.md         # LLM provider configuration
+├── features/OLLAMA_CONFIGURATION.md  # Advanced Ollama configuration
+├── CHANGELOG.md                      # Recent changes, git history
+└── SESSIONS.md                       # Development history, context
 ```
 
 ---

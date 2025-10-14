@@ -13,10 +13,20 @@ from typing import Optional
 class OllamaManager:
     """Manages Ollama installation and subprocess lifecycle"""
 
-    def __init__(self, model: str = "llama3.2:3b"):
+    def __init__(self, model: str = "llama3.2:3b", executable_path: Optional[str] = None, base_url: Optional[str] = None):
+        """
+        Initialize Ollama manager
+
+        Args:
+            model: Model name to use (default: llama3.2:3b)
+            executable_path: Optional path to ollama executable (for custom installations)
+            base_url: Optional base URL for external Ollama server (skips subprocess management)
+        """
         self.model = model
         self.process: Optional[subprocess.Popen] = None
-        self.base_url = "http://localhost:11434"
+        self._custom_executable = Path(executable_path) if executable_path else None
+        self._external_base_url = base_url  # If set, use external server (no subprocess)
+        self.base_url = base_url if base_url else "http://localhost:11434"
         self._install_dir = self._get_install_dir()
 
     def _get_install_dir(self) -> Path:
@@ -32,20 +42,61 @@ class OllamaManager:
             return Path.home() / ".local" / "bin"
 
     def _get_ollama_executable(self) -> Optional[Path]:
-        """Find ollama executable in PATH or install directory"""
-        # Check if ollama is in PATH
+        """
+        Find ollama executable with comprehensive detection
+
+        Priority:
+        1. Custom executable path (from config)
+        2. System PATH (shutil.which)
+        3. Common installation directories (platform-specific)
+
+        Returns:
+            Path to ollama executable, or None if not found
+        """
+        # Priority 1: Custom executable path from config
+        if self._custom_executable:
+            if self._custom_executable.exists():
+                return self._custom_executable
+            else:
+                print(f"  - Warning: Custom Ollama path not found: {self._custom_executable}")
+
+        # Priority 2: Check if ollama is in PATH
         ollama_path = shutil.which("ollama")
         if ollama_path:
             return Path(ollama_path)
 
-        # Check install directory
-        if platform.system() == "Windows":
-            exe_path = self._install_dir / "ollama.exe"
-        else:
-            exe_path = self._install_dir / "ollama"
+        # Priority 3: Check common installation directories
+        search_paths = []
 
-        if exe_path.exists():
-            return exe_path
+        if platform.system() == "Windows":
+            # Windows: Check multiple common locations
+            search_paths = [
+                Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Ollama" / "ollama.exe",
+                Path(os.environ.get("PROGRAMFILES", "C:\\Program Files")) / "Ollama" / "ollama.exe",
+                Path(os.environ.get("PROGRAMFILES(X86)", "C:\\Program Files (x86)")) / "Ollama" / "ollama.exe",
+                Path(os.environ.get("APPDATA", "")) / "Ollama" / "ollama.exe",
+            ]
+        elif platform.system() == "Darwin":
+            # macOS: Check common locations
+            search_paths = [
+                Path("/usr/local/bin/ollama"),
+                Path("/opt/homebrew/bin/ollama"),
+                Path.home() / ".local" / "bin" / "ollama",
+                Path("/Applications/Ollama.app/Contents/MacOS/ollama"),
+            ]
+        else:
+            # Linux: Check common locations
+            search_paths = [
+                Path.home() / ".local" / "bin" / "ollama",
+                Path("/usr/local/bin/ollama"),
+                Path("/usr/bin/ollama"),
+                Path("/opt/ollama/bin/ollama"),
+            ]
+
+        # Check each search path
+        for path in search_paths:
+            if path and path.exists():
+                return path
 
         return None
 
@@ -177,11 +228,22 @@ class OllamaManager:
 
     def start(self) -> bool:
         """
-        Start Ollama server as subprocess.
+        Start Ollama server as subprocess (unless using external server).
 
         Returns:
             True if server started successfully, False otherwise
         """
+        # Check if using external server
+        if self._external_base_url:
+            print(f"  - Using external Ollama server at {self._external_base_url}")
+            if self.is_running():
+                print("  - External server is reachable")
+                return True
+            else:
+                print("  - ERROR: Cannot reach external Ollama server")
+                print(f"  - Please ensure Ollama is running at {self._external_base_url}")
+                return False
+
         # Check if already running
         if self.is_running():
             print("  - Ollama server already running")
@@ -193,7 +255,7 @@ class OllamaManager:
             print("  - Ollama executable not found")
             return False
 
-        print("  - Starting Ollama server...")
+        print(f"  - Starting Ollama server (found at: {ollama_exe})...")
 
         try:
             # Start ollama serve in background
@@ -414,14 +476,16 @@ class OllamaManager:
         self.stop()
 
 
-def get_ollama_manager(model: str = "llama3.2:3b") -> OllamaManager:
+def get_ollama_manager(model: str = "llama3.2:3b", executable_path: Optional[str] = None, base_url: Optional[str] = None) -> OllamaManager:
     """
     Get an Ollama manager instance.
 
     Args:
         model: Model name to use (default: llama3.2:3b)
+        executable_path: Optional path to ollama executable (for custom installations)
+        base_url: Optional base URL for external Ollama server
 
     Returns:
         OllamaManager instance
     """
-    return OllamaManager(model=model)
+    return OllamaManager(model=model, executable_path=executable_path, base_url=base_url)

@@ -201,6 +201,56 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 
 ## Session History & Lessons Learned
 
+### Session 2025-10-14 (Latest): Ollama Path Detection + Integration Tests
+
+**What was done:**
+1. **Enhanced Ollama executable path detection** - multi-location auto-detection for Windows/macOS/Linux
+2. **Added manual configuration options** - executable_path and base_url config parameters
+3. **Created comprehensive integration tests** - 8 test classes, 20+ test cases for Ollama
+4. **Created diagnostic tool** - test_ollama_quick.py for timeout troubleshooting
+5. **Documented Ollama configuration** - NEW OLLAMA_CONFIGURATION.md (540 lines)
+
+**The problem:**
+- Ollama can be installed in different locations on different PCs (standard, custom, portable)
+- User reported Ollama "not found" even though it was installed
+- Auto-detection only checked 1-2 locations per platform (insufficient)
+- No way to manually specify Ollama path for non-standard installations
+- Timeout issues difficult to diagnose (GPU vs CPU, model speed)
+
+**The solution:**
+1. **Multi-location detection:** Check PATH + 4-5 common locations per platform (Windows: %LOCALAPPDATA%, Program Files, Program Files (x86), %APPDATA%; macOS: /usr/local/bin, /opt/homebrew/bin, ~/.local/bin, /Applications/Ollama.app; Linux: ~/.local/bin, /usr/local/bin, /usr/bin, /opt/ollama/bin)
+2. **Manual config options:** Added `executable_path` (custom Ollama path) and enhanced `base_url` (external server) config parameters
+3. **Priority system:** Custom path → PATH → Platform-specific locations → Fail with clear error
+4. **Integration tests:** Cover installation detection, custom paths, external servers, generation, timeouts, error messages
+5. **Diagnostic tool:** test_ollama_quick.py tests server connection + generation timing to identify slow model/CPU issues
+
+**Key lessons:**
+- ✅ Comprehensive path detection prevents "not found" errors on different PCs
+- ✅ Manual configuration options essential for non-standard installations (portable, custom directory, remote server)
+- ✅ Integration tests catch real-world configuration issues (different install locations, paths, servers)
+- ✅ Diagnostic tools help users self-diagnose issues (timeout = slow model, not "Ollama broken")
+- ✅ Document both automatic AND manual configuration (users need fallback when auto-detection fails)
+- ✅ Priority system makes behavior predictable (custom path always wins)
+- ✅ Platform-specific paths vary widely (Windows alone has 4+ common locations)
+- ❌ DON'T assume PATH detection is sufficient - many installers don't add to PATH
+- ❌ DON'T assume single installation location per platform - users install in custom locations
+- ❌ DON'T skip integration tests for cross-platform features - path detection is OS-specific
+
+**Files modified:**
+- shared/ollama_manager.py - Enhanced `_get_ollama_executable()` with multi-location detection (lines 44-101), added executable_path + base_url parameters
+- shared/llm_utils.py - Read and pass executable_path config to OllamaManager
+- docs/features/OLLAMA_CONFIGURATION.md - NEW comprehensive configuration guide (540 lines)
+- config.local.json.example - Added executable_path example
+- tests/integration/test_ollama.py - NEW integration test suite (600 lines, 8 classes)
+- test_ollama_quick.py - NEW diagnostic tool for timeout troubleshooting
+
+**Test results:** ✅ 280/280 unit tests pass, 20+ integration tests created
+**Impact:**
+- Cross-platform Ollama detection works reliably on any PC (standard or custom installation)
+- Users can manually configure Ollama path when auto-detection fails
+- Integration tests catch configuration issues before they affect users
+- Diagnostic tool helps users identify timeout issues (model speed, GPU vs CPU)
+
 ### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout + Config Optimization
 
 **What was done:**

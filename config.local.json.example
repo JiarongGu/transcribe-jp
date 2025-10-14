@@ -17,6 +17,7 @@
     "ollama": {
       "model": "llama3.2:3b"
       // "base_url": "http://localhost:11434"  // Optional: Use external Ollama server
+      // "executable_path": "D:\\CustomPath\\ollama.exe"  // Optional: Custom Ollama installation path
       // "timeout": 45         // Optional: Override timeout for Ollama (useful for large models)
     },
 
@@ -97,5 +98,22 @@
   //   }
   // }
 
+  // Example 4: Custom Ollama installation path
+  // {
+  //   "llm": {
+  //     "provider": "ollama",
+  //     "timeout": 90,
+  //     "ollama": {
+  //       "model": "qwen3:8b",
+  //       "executable_path": "D:\\CustomApps\\Ollama\\ollama.exe"  // For non-standard installations
+  //     }
+  //   },
+  //   "text_polishing": {
+  //     "batch_size": 1,
+  //     "llm_timeout": 180  // 3 minutes for larger model
+  //   }
+  // }
+
   // For detailed LLM configuration guide, see: docs/features/LLM_PROVIDERS.md
+  // For advanced Ollama configuration: docs/features/OLLAMA_CONFIGURATION.md
 }

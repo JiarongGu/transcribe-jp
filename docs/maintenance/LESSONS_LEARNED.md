@@ -218,6 +218,167 @@ System automatically handles everything!
 
 ---
 
+### ✅ Lesson: Comprehensive Path Detection for Cross-Platform Tools
+
+**Date:** 2025-10-14
+**Context:** Ollama installation detection across different PCs
+
+**Problem:** Ollama can be installed in different locations on different PCs:
+- Windows: %LOCALAPPDATA%\Programs\Ollama, C:\Program Files\Ollama, C:\Program Files (x86)\Ollama, %APPDATA%\Ollama
+- macOS: /usr/local/bin, /opt/homebrew/bin, ~/.local/bin, /Applications/Ollama.app/Contents/MacOS
+- Linux: ~/.local/bin, /usr/local/bin, /usr/bin, /opt/ollama/bin
+
+Initial implementation only checked 1-2 locations per platform, causing "not found" errors for custom installations.
+
+**Solution:** Multi-location detection with priority system:
+```python
+def _get_ollama_executable(self):
+    # Priority 1: Custom executable path from config
+    if self._custom_executable:
+        if self._custom_executable.exists():
+            return self._custom_executable
+
+    # Priority 2: Check PATH
+    ollama_path = shutil.which("ollama")
+    if ollama_path:
+        return Path(ollama_path)
+
+    # Priority 3: Check platform-specific common locations (4-5 paths each)
+    for path in search_paths:
+        if path and path.exists():
+            return path
+
+    return None
+```
+
+**Benefits:**
+- Works across different installation methods (installer, manual, portable, Homebrew, apt, etc.)
+- Custom path config as fallback for unusual installations
+- Clear priority system (custom > PATH > common locations)
+- Platform-specific paths cover all major installation methods
+
+**Lesson:** For cross-platform tool detection, check PATH + 4-5 common locations per platform. Don't assume PATH detection is sufficient.
+
+**Implementation:** [shared/ollama_manager.py:44-101](../../shared/ollama_manager.py)
+
+---
+
+### ✅ Lesson: Provide Manual Configuration as Fallback for Auto-Detection
+
+**Date:** 2025-10-14
+**Context:** Ollama executable path configuration
+
+**Problem:** Auto-detection can't cover every possible installation scenario:
+- Portable installations (USB drive, network drive)
+- Company-managed installations (custom IT policies)
+- Multiple versions installed (development, production)
+- Unusual directory structures (non-standard conventions)
+
+**Solution:** Add manual configuration options with clear priority:
+```json
+{
+  "ollama": {
+    "model": "llama3.2:3b",
+    "executable_path": "D:\\CustomPath\\ollama.exe",  // Optional: Custom path
+    "base_url": "http://localhost:11434"  // Optional: External server
+  }
+}
+```
+
+**Benefits:**
+- Users aren't blocked if auto-detection fails
+- Supports unusual installation scenarios
+- Works with remote/external servers
+- Clear fallback path when auto-detection doesn't work
+- Documented in OLLAMA_CONFIGURATION.md
+
+**Lesson:** Auto-detection is great, but always provide manual configuration as fallback. Users need escape hatch when auto-detection fails.
+
+**Implementation:** [shared/ollama_manager.py:16-30, 56-61](../../shared/ollama_manager.py), [docs/features/OLLAMA_CONFIGURATION.md](../../docs/features/OLLAMA_CONFIGURATION.md)
+
+---
+
+### ✅ Lesson: Integration Tests for Cross-Platform Features
+
+**Date:** 2025-10-14
+**Context:** Ollama path detection testing
+
+**Problem:** Unit tests with mocks don't catch real-world path detection issues:
+- Mock returns fake path that doesn't exist
+- Can't test actual platform-specific behavior
+- Doesn't verify paths are correct for different OSes
+- Misses edge cases (permissions, symlinks, portable drives)
+
+**Solution:** Create integration tests that can run with real installations:
+```python
+# Mock tests for CI/CD (always run)
+def test_path_detection_mocked(self):
+    with patch('shutil.which', return_value="/usr/bin/ollama"):
+        assert manager.is_installed() is True
+
+# Real tests for development (opt-in via env var)
+@pytest.mark.skipif(not OLLAMA_AVAILABLE, reason="Requires real Ollama")
+def test_path_detection_real(self):
+    manager = OllamaManager()
+    assert manager.is_installed() is True
+    exe = manager._get_ollama_executable()
+    assert exe.exists()  # Actually checks filesystem
+```
+
+**Benefits:**
+- Mocked tests run in CI/CD (fast, no dependencies)
+- Real tests verify actual behavior on different PCs
+- Can opt-in to real tests via environment variable
+- Catches real-world issues (permissions, paths, platform differences)
+
+**Lesson:** Cross-platform features need both mocked tests (CI/CD) AND integration tests with real installations (development). Use environment variable to opt-in to real tests.
+
+**Implementation:** [tests/integration/test_ollama.py](../../tests/integration/test_ollama.py)
+
+---
+
+### ✅ Lesson: Diagnostic Tools Help Users Self-Serve
+
+**Date:** 2025-10-14
+**Context:** Creating test_ollama_quick.py diagnostic tool
+
+**Problem:** Users report "Ollama timeout" but don't know WHY:
+- Is Ollama too slow?
+- Is GPU being used?
+- Is the model too large?
+- Is the server working at all?
+
+Support burden: Every timeout issue requires back-and-forth diagnosis.
+
+**Solution:** Create quick diagnostic tool that shows timing:
+```python
+def test_ollama_generation():
+    print("1. Testing server connection...")
+    # ✅ Server reachable, 3 models available
+
+    print("2. Testing text generation (simple prompt)...")
+    start = time.time()
+    response = requests.post(...)
+    elapsed = time.time() - start
+    # ✅ Generation succeeded in 10.9s  ← USER SEES THIS
+
+    print("3. Testing Japanese generation...")
+    # ❌ Request TIMED OUT after 45s
+    # THIS IS YOUR ISSUE! Model is too slow, increase timeout
+```
+
+**Benefits:**
+- Users diagnose issues themselves (reduces support burden)
+- Shows exact timing so users can identify slow models
+- Clear actionable feedback ("increase timeout", "use smaller model", "check GPU")
+- Runs in seconds, doesn't require full pipeline
+
+**Lesson:** For complex dependencies (Ollama, GPU, models), create diagnostic tools that show timing/performance. Users can self-diagnose instead of asking for help.
+
+**Implementation:** [test_ollama_quick.py](../../test_ollama_quick.py)
+
+---
+
 ## LLM Provider System
 
 ### ✅ Lesson: Don't Create Example Config Files, Use Documentation Instead

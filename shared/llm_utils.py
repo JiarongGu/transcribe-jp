@@ -93,6 +93,7 @@ class OllamaProvider(LLMProvider):
 
         # Auto-manage Ollama or use external URL
         self.base_url = ollama_config.get("base_url")
+        executable_path = ollama_config.get("executable_path")  # NEW: Custom executable path
         self.manager = None
         self._model_checked = False  # Track if we've already checked/pulled the model
 
@@ -100,7 +101,10 @@ class OllamaProvider(LLMProvider):
             # Auto-managed mode: Initialize Ollama manager
             from shared.ollama_manager import get_ollama_manager
 
-            self.manager = get_ollama_manager(model=self.model)
+            self.manager = get_ollama_manager(
+                model=self.model,
+                executable_path=executable_path  # Pass custom path if provided
+            )
 
             # Initialize Ollama (install if needed, start server, pull model)
             if not self.manager.initialize():
@@ -110,6 +114,20 @@ class OllamaProvider(LLMProvider):
             self._model_checked = True  # Model was checked during initialize()
         else:
             # External mode: Use provided base_url (backward compatible)
+            # Can also use custom executable_path with external server
+            from shared.ollama_manager import get_ollama_manager
+
+            self.manager = get_ollama_manager(
+                model=self.model,
+                executable_path=executable_path,
+                base_url=self.base_url  # Use external server
+            )
+
+            # Just verify external server is reachable
+            if not self.manager.start():
+                raise RuntimeError(f"Cannot reach external Ollama server at {self.base_url}")
+
+            self._model_checked = False  # Need to check model on external server
             print(f"  - Using external Ollama server at {self.base_url}")
 
     def _ensure_model(self) -> bool:
