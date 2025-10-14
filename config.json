@@ -35,7 +35,7 @@
   "text_polishing": {
     "enable": true,
     "batch_size": 1,
-    "llm_timeout": 180
+    "llm_timeout": 90
   },
   "hallucination_filter": {
     "phrase_filter": {
@@ -107,9 +107,9 @@
     "provider": "ollama",
     "max_tokens": 1024,
     "temperature": 0.0,
-    "timeout": 60,
+    "timeout": 45,
     "ollama": {
-      "model": "qwen3:32b"
+      "model": "qwen3:8b"
     },
     "anthropic": {
       "api_key": "<your-anthropic-api-key-here>",
