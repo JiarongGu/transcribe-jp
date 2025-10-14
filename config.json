@@ -34,8 +34,7 @@
   },
   "text_polishing": {
     "enable": true,
-    "batch_size": 1,
-    "llm_timeout": 90
+    "batch_size": 1
   },
   "hallucination_filter": {
     "phrase_filter": {
