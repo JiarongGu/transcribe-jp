@@ -2,10 +2,10 @@
 
 > **LIVING DOCUMENT:** This guide is maintained by AI assistants across sessions. If you discover new patterns, conventions, or lessons learned while working on this project, **UPDATE THE DETAILED GUIDES** and commit your changes. Future AI sessions depend on this knowledge.
 
-**Version:** 3.2
+**Version:** 3.3
 **Last Updated:** 2025-10-14
-**Changes from v3.1:** Added Session History section for long-term maintenance
-**Latest update:** Session 2025-10-14 - Batch processing control + Ollama validation
+**Changes from v3.2:** Added prominent warnings that AI_GUIDE.md is navigation only, must read GUIDELINES.md and WORKFLOWS.md
+**Latest update:** Session 2025-10-14 - Fixed navigation issue causing AI assistants to skip full checklists
 
 ---
 
@@ -19,7 +19,24 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ---
 
-## 6 Critical Rules (Non-Negotiable)
+## ⚠️ BEFORE YOU START: Read These First
+
+This AI_GUIDE.md is a **NAVIGATION HUB** - it provides a summary and points you to detailed guides.
+
+**🚨 CRITICAL: The "6 Critical Rules" below is a QUICK REFERENCE ONLY! 🚨**
+
+**YOU MUST read the full checklists in:**
+1. **[ai-assistant/GUIDELINES.md](ai-assistant/GUIDELINES.md)** - Complete DO's and DON'Ts (8 rules + 6 mistakes)
+2. **[ai-assistant/WORKFLOWS.md](ai-assistant/WORKFLOWS.md)** - Step-by-step git commit workflow with full checklist
+
+**❌ Common mistake:** Reading only AI_GUIDE.md's 6 rules and thinking that's everything
+**✅ Correct approach:** AI_GUIDE.md for navigation → GUIDELINES.md + WORKFLOWS.md for full details
+
+---
+
+## 6 Critical Rules (Quick Reference - NOT Complete!)
+
+**⚠️ This is a SUMMARY. Read [GUIDELINES.md](ai-assistant/GUIDELINES.md) for full rules!**
 
 1. **ALWAYS run tests before committing** - All 280+ tests must pass
    ```bash
@@ -68,7 +85,10 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 2. [maintenance/LESSONS_LEARNED.md](maintenance/LESSONS_LEARNED.md) - **START HERE!** Mistakes to avoid
 3. [core/ARCHITECTURE.md](core/ARCHITECTURE.md) - 9-stage pipeline, directory structure
 4. [CHANGELOG.md](CHANGELOG.md) - Recent changes and git history
-5. **[ai-assistant/GUIDELINES.md](ai-assistant/GUIDELINES.md)** - Critical DO's and DON'Ts (detailed)
+5. **[ai-assistant/GUIDELINES.md](ai-assistant/GUIDELINES.md)** - **MANDATORY!** Complete rules (8 DO's + 6 DON'Ts)
+6. **[ai-assistant/WORKFLOWS.md](ai-assistant/WORKFLOWS.md)** - **READ BEFORE COMMITTING!** Git workflow checklist
+
+**⚠️ CRITICAL for committing:** Read GUIDELINES.md #1-3 and WORKFLOWS.md "Git Commit Workflow" section BEFORE making any commits!
 
 ---
 
@@ -440,7 +460,17 @@ Use this checklist BEFORE every commit that adds user-facing features:
 - ✅ Fixed progress bar bug → No user-visible config changes, no docs needed
 - ✅ Refactored internal code → No user impact, no docs needed
 
-**Keep this file under 400 lines** - It's a navigation hub, not a knowledge base
+**Keep this file under 450 lines** - It's a navigation hub, not a knowledge base
+
+---
+
+## Version History
+
+**v3.3 (2025-10-14):** Added prominent warnings that AI_GUIDE.md is a navigation hub, not the complete rulebook. AI assistants were skipping GUIDELINES.md and WORKFLOWS.md, causing incomplete commits. Added "BEFORE YOU START" section and emphasized reading full guides before committing.
+
+**v3.2 (2025-10-14):** Added Session History section for long-term maintenance tracking.
+
+**v3.1 (2025-10-12):** Initial restructure to separate navigation (AI_GUIDE.md) from detailed guides (GUIDELINES.md, WORKFLOWS.md, etc.).
 
 ---
 

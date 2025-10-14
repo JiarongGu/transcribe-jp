@@ -1,4 +1,48 @@
-## [2025-10-14 Current] - Ollama Path Detection + Integration Tests
+## [2025-10-14 18:30] - Fixed AI_GUIDE.md Navigation Issue
+
+### Changed
+
+- **Enhanced AI_GUIDE.md to prevent AI assistants from skipping full checklists**
+  - Added prominent "BEFORE YOU START" section warning that AI_GUIDE.md is navigation only
+  - Emphasized that "6 Critical Rules" is a QUICK REFERENCE, not complete
+  - Added explicit instruction to read GUIDELINES.md and WORKFLOWS.md before committing
+  - Updated Quick Start Sequence to emphasize mandatory reading of full guides
+  - Added Version History section documenting this fix
+  - File: `docs/AI_GUIDE.md`
+
+**The problem:**
+AI assistants were reading only AI_GUIDE.md's "6 Critical Rules" summary and thinking that was the complete rulebook, skipping GUIDELINES.md (8 DO's + 6 DON'Ts) and WORKFLOWS.md (full git commit workflow with documentation verification checklist).
+
+**Why this matters:**
+This caused incomplete commits where AI assistants:
+- Didn't follow the full documentation verification workflow from WORKFLOWS.md
+- Missed the detailed commit checklist steps
+- Skipped running `grep -r "feature_name" docs/` to find related docs
+- Violated Rule #3 (documentation updates) without realizing it
+
+**The solution:**
+1. Added **"⚠️ BEFORE YOU START"** section at top of AI_GUIDE.md
+2. Changed header from "6 Critical Rules" → "6 Critical Rules (Quick Reference - NOT Complete!)"
+3. Added explicit warning: "🚨 CRITICAL: The '6 Critical Rules' below is a QUICK REFERENCE ONLY! 🚨"
+4. Added instruction: "YOU MUST read the full checklists in: GUIDELINES.md and WORKFLOWS.md"
+5. Updated Quick Start Sequence to emphasize reading these guides BEFORE committing
+6. Added version history tracking guide improvements
+
+**Impact:**
+- Future AI assistants will understand AI_GUIDE.md is a navigation hub, not the rulebook
+- Commits will follow complete workflows from GUIDELINES.md and WORKFLOWS.md
+- Documentation verification will use proper grep-based search from WORKFLOWS.md
+- Prevents Rule #3 violations (missing documentation updates)
+
+**Files changed:**
+- `docs/AI_GUIDE.md` - Added navigation warnings, updated Quick Start, added Version History section
+- Version updated from 3.2 → 3.3
+
+**Test results:** No code changes, documentation-only update
+
+---
+
+## [2025-10-14 Earlier] - Ollama Path Detection + Integration Tests
 
 ### Added
 
