@@ -108,7 +108,7 @@
     "temperature": 0.0,
     "timeout": 45,
     "ollama": {
-      "model": "qwen3:8b"
+      "model": "qwen2.5:7b"
     },
     "anthropic": {
       "api_key": "<your-anthropic-api-key-here>",

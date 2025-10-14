@@ -4,6 +4,105 @@ This document tracks development sessions with lessons learned and key decisions
 
 **Add new entries at the top when completing significant work.**
 
+## Archiving Policy
+
+**To keep this file manageable and optimize token usage:**
+
+- **Archive threshold:** When SESSIONS.md exceeds **400 lines**, archive older sessions
+- **Archive naming:** `SESSIONS_ARCHIVE_YYYY-MM.md` (group by month, like CHANGELOG archives)
+- **Keep recent:** Keep last **3-6 months** in main SESSIONS.md for immediate context
+- **Archive location:** Same folder (`docs/maintenance/`)
+- **Archive format:** Same structure, add header explaining it's an archive with date range
+
+**When to archive:**
+1. File exceeds 400 lines → move sessions older than 3 months to archive
+2. New year starts → archive previous year's sessions (except last 3 months)
+3. Major project milestone → consider archiving pre-milestone sessions
+
+**Current status:** 328 lines (below threshold, no archiving needed yet)
+
+---
+
+## Session 2025-10-14 (Latest): Ollama Path Detection + Integration Tests
+
+**What was done:**
+1. **Enhanced Ollama executable path detection** - multi-location auto-detection for Windows/macOS/Linux
+2. **Added manual configuration options** - executable_path and base_url config parameters
+3. **Created comprehensive integration tests** - 8 test classes, 20+ test cases for Ollama
+4. **Created diagnostic tool** - test_ollama_quick.py for timeout troubleshooting
+5. **Documented Ollama configuration** - NEW OLLAMA_CONFIGURATION.md (540 lines)
+
+**The problem:**
+- Ollama can be installed in different locations on different PCs (standard, custom, portable)
+- User reported Ollama "not found" even though it was installed
+- Auto-detection only checked 1-2 locations per platform (insufficient)
+- No way to manually specify Ollama path for non-standard installations
+- Timeout issues difficult to diagnose (GPU vs CPU, model speed)
+
+**The solution:**
+1. **Multi-location detection:** Check PATH + 4-5 common locations per platform
+2. **Manual config options:** Added `executable_path` (custom Ollama path) and enhanced `base_url` (external server)
+3. **Priority system:** Custom path → PATH → Platform-specific locations → Fail with clear error
+4. **Integration tests:** Cover installation detection, custom paths, external servers, generation, timeouts, error messages
+5. **Diagnostic tool:** test_ollama_quick.py tests server connection + generation timing to identify slow model/CPU issues
+
+**Key lessons:**
+- ✅ Comprehensive path detection prevents "not found" errors on different PCs
+- ✅ Manual configuration options essential for non-standard installations
+- ✅ Integration tests catch real-world configuration issues
+- ✅ Diagnostic tools help users self-diagnose issues
+- ❌ DON'T assume PATH detection is sufficient - many installers don't add to PATH
+- ❌ DON'T assume single installation location per platform
+- ❌ DON'T skip integration tests for cross-platform features
+
+**Files modified:**
+- shared/ollama_manager.py - Enhanced `_get_ollama_executable()` with multi-location detection
+- shared/llm_utils.py - Read and pass executable_path config to OllamaManager
+- docs/features/OLLAMA_CONFIGURATION.md - NEW comprehensive configuration guide
+- tests/integration/test_ollama.py - NEW integration test suite (600 lines, 8 classes)
+
+**Test results:** ✅ 280/280 unit tests pass, 20+ integration tests created
+
+---
+
+## Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout + Config Optimization
+
+**What was done:**
+1. **Fixed progress bar duplication** in text polishing one-by-one mode
+2. **Improved error reporting** - shows error type, segment number, actual text
+3. **Added automatic model pulling with progress bar** for Ollama
+4. **Added flexible timeout configuration** - common, provider-specific, stage-specific
+5. **Added unlimited max_tokens feature** - set to 0 for no token limit
+6. **Enhanced Ollama error handling** - detailed diagnostics for all timeout/connection scenarios
+
+**Key lessons:**
+- ✅ Progress bars should be called once per iteration, not in multiple code paths
+- ✅ Error messages should show WHAT failed, WHERE, and WHY
+- ✅ Large models (32B+) need 2-5 minutes timeout, not 30 seconds
+- ✅ Timeout should be configurable at multiple levels (global, provider, stage)
+- ❌ DON'T hardcode timeouts - models vary from 2B to 32B+ parameters
+- ❌ **DON'T skip documentation updates** - violates Rule #3, breaks future sessions
+
+**Test results:** ✅ 280/280 tests pass (no regressions)
+
+---
+
+## Session 2025-10-14: Batch Processing Control + Ollama Pre-Flight Validation
+
+**What was done:**
+1. **Added batch processing disable feature** for text polishing
+2. **Added Ollama pre-flight validation** - checks if Ollama installed before starting pipeline
+3. **Updated documentation** across 4 docs files
+4. **Added 10 new unit tests** (272 → 280 tests)
+
+**Key lessons:**
+- ✅ Check batch processing behavior for different providers (cloud vs local)
+- ✅ Validate dependencies at startup, not mid-pipeline (better UX)
+- ✅ Clear error messages with platform-specific instructions (Windows/macOS/Linux)
+- ❌ DON'T assume auto-installation will work - manual installation is more reliable
+
+**Test results:** ✅ 280/280 tests pass (+10 new tests)
+
 ---
 
 ## Session 2025-01-11 (Part 3): Streamline AI_GUIDE.md

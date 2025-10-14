@@ -28,6 +28,7 @@ This document captures **lessons learned** across all development sessions to:
 5. [Code Organization](#code-organization)
 6. [Japanese Language Handling](#japanese-language-handling)
 7. [Pipeline Architecture](#pipeline-architecture)
+8. [Git and Version Control](#git-and-version-control)
 
 ---
 
@@ -833,6 +834,45 @@ When adding significant lessons:
 
 ---
 
+## Git and Version Control
+
+### ❌ NEVER Revert or Unstage User Changes
+
+**Date:** 2025-10-14
+**Context:** Token optimization commit workflow
+
+**Critical Rule:** NEVER use `git restore --staged` or similar commands to revert/unstage changes that the user has made or already staged.
+
+**What happened:**
+AI assistant saw config.json staged with change `qwen3:8b → qwen2.5:7b`, thought it was unrelated to current commit (token optimization), and ran `git restore --staged config.json` to unstage it for a "separate commit."
+
+**Why this is WRONG:**
+1. **User's decision** - User manually edited and staged this file
+2. **Destroys user intent** - User wanted this change committed
+3. **Overstepping authority** - AI should only ADD changes, not REMOVE user's work
+4. **Breaks trust** - User expects their edits to remain unless explicitly asked to revert
+
+**The correct approach:**
+- ✅ If file is already staged → include it in commit (user's intent)
+- ✅ If unsure about why it's staged → ask user, DON'T unstage
+- ✅ AI can ADD new changes, but NEVER REMOVE user's changes
+- ✅ Only exception: User explicitly asks "please revert X"
+
+**Code examples to NEVER run (unless user explicitly requests):**
+```bash
+# ❌ NEVER do these
+git restore --staged <file>  # Unstages user's work
+git restore <file>  # Discards user's edits
+git reset HEAD <file>  # Unstages user's work
+git checkout -- <file>  # Discards user's edits
+```
+
+**Lesson:** AI assistants should only ADD to the user's work, never SUBTRACT. If something is staged, the user put it there intentionally. Respect that decision.
+
+**Impact:** This is a fundamental trust issue. Users must be confident their edits won't be silently reverted by AI assistant "helpfulness."
+
+---
+
 ## Quick Reference Checklist
 
 Before making major changes, ask:
@@ -846,6 +886,7 @@ Before making major changes, ask:
 - [ ] Have I updated test assertions for changed error messages?
 - [ ] Is this properly cross-referenced in AI_GUIDE.md?
 - [ ] Did I add a lesson to LESSONS_LEARNED.md?
+- [ ] Am I about to unstage/revert user changes? (DON'T - see "Git and Version Control")
 
 ---
 

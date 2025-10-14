@@ -1,3 +1,56 @@
+## [2025-10-14 19:00] - Optimized AI_GUIDE.md Token Usage + Archiving Strategy
+
+### Changed
+
+- **Moved session history from AI_GUIDE.md to maintenance/SESSIONS.md for token optimization**
+  - AI_GUIDE.md reduced from 477 lines → 316 lines (33% reduction)
+  - Session history (146 lines) moved to maintenance/SESSIONS.md where it belongs
+  - Updated all references in AI_GUIDE.md to point to maintenance/SESSIONS.md
+  - Updated Documentation Map to show correct file location
+  - Files: `docs/AI_GUIDE.md`, `docs/maintenance/SESSIONS.md`
+
+### Added
+
+- **Archiving policy for SESSIONS.md to prevent unbounded growth**
+  - Archive threshold: 400 lines (current: 350 lines, no action needed yet)
+  - Archive naming: `SESSIONS_ARCHIVE_YYYY-MM.md` (follows CHANGELOG pattern)
+  - Keep recent: Last 3-6 months in main file for immediate context
+  - Documented when to archive: file size, new year, major milestones
+  - Files: `docs/maintenance/SESSIONS.md`
+
+**The problem:**
+AI_GUIDE.md exceeded its target of 450 lines (was 477 lines). Session history (146 lines) was embedded in AI_GUIDE.md. Documentation Map showed SESSIONS.md in wrong location (docs/ instead of docs/maintenance/). Violated the token optimization principle stated in AI_GUIDE.md itself: "Keep this file under 450 lines - It's a navigation hub, not a knowledge base". Additionally, SESSIONS.md will grow unbounded without archiving strategy.
+
+**Why this matters:**
+AI_GUIDE.md is loaded in every session and must be compact for token efficiency. Session history is detailed/verbose and belongs in maintenance/ folder with LESSONS_LEARNED.md. Proper file organization follows docs structure: maintenance/ for historical/knowledge content. **Reduces token usage by 33% when loading AI_GUIDE.md** (critical for staying within budget). Archiving strategy prevents SESSIONS.md from becoming too large (same token optimization principle).
+
+**The solution:**
+1. Moved docs/SESSIONS.md → docs/maintenance/SESSIONS.md (correct location per doc map)
+2. Prepended 2025-10-14 session history to maintenance/SESSIONS.md (added latest 3 sessions)
+3. Replaced 146 lines of session history in AI_GUIDE.md with 17-line summary + link
+4. Updated Documentation Map: `SESSIONS.md` → `maintenance/SESSIONS.md`
+5. Updated checklist: "add session history to AI_GUIDE.md" → "add session history to maintenance/SESSIONS.md"
+6. Added archiving policy to SESSIONS.md following CHANGELOG_ARCHIVE pattern
+
+**Archiving policy details:**
+- **Threshold**: 400 lines (similar to CHANGELOG archiving at ~300-500 lines)
+- **Pattern**: `SESSIONS_ARCHIVE_YYYY-MM.md` (matches existing CHANGELOG_ARCHIVE_2025-10.md)
+- **Retention**: Keep last 3-6 months of sessions in main file
+- **Triggers**: File size exceeds 400 lines, new year starts, or major milestone reached
+- **Current status**: 350 lines (below threshold, no archiving needed yet)
+
+**Impact:**
+- AI_GUIDE.md now 316 lines (under 450 line target) ✅
+- Token usage optimized by 33% when loading AI_GUIDE.md
+- Session history properly organized in maintenance/ folder
+- Archiving strategy prevents unbounded growth of SESSIONS.md
+- Follows the guidance from GUIDELINES.md and WORKFLOWS.md about file organization
+- Future sessions will add to maintenance/SESSIONS.md, with archiving at 400 lines
+
+**Test results:** Documentation-only, no code changes
+
+---
+
 ## [2025-10-14 18:30] - Fixed AI_GUIDE.md Navigation Issue
 
 ### Changed
