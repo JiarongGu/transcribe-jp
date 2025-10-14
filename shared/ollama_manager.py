@@ -240,63 +240,140 @@ class OllamaManager:
                 self.process.kill()
             self.process = None
 
-    def ensure_model_available(self) -> bool:
+    def is_model_available(self) -> bool:
         """
-        Ensure the required model is downloaded.
+        Check if the required model is already downloaded.
 
         Returns:
             True if model is available, False otherwise
         """
         if not self.is_running():
-            print("  - Error: Ollama server not running")
             return False
 
         try:
             import requests
 
-            # Check if model exists
             response = requests.get(f"{self.base_url}/api/tags", timeout=10)
             if response.status_code == 200:
                 models = response.json().get("models", [])
                 model_names = [m.get("name", "") for m in models]
+                return self.model in model_names
 
-                if self.model in model_names:
+        except Exception:
+            pass
+
+        return False
+
+    def _format_bytes(self, bytes_val: int) -> str:
+        """Format bytes into human-readable format"""
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if bytes_val < 1024.0:
+                return f"{bytes_val:.1f}{unit}"
+            bytes_val /= 1024.0
+        return f"{bytes_val:.1f}TB"
+
+    def ensure_model_available(self, silent_check: bool = False) -> bool:
+        """
+        Ensure the required model is downloaded.
+
+        Args:
+            silent_check: If True, don't print "already available" message
+
+        Returns:
+            True if model is available, False otherwise
+        """
+        if not self.is_running():
+            print("  - ERROR: Ollama server not running")
+            return False
+
+        try:
+            import requests
+            import json
+
+            # Check if model exists
+            if self.is_model_available():
+                if not silent_check:
                     print(f"  - Model {self.model} already available")
-                    return True
+                return True
 
             # Model not found, pull it
-            print(f"  - Pulling model {self.model} (this may take several minutes)...")
-            print(f"  - Model size: ~2GB for llama3.2:3b")
+            print(f"\n  - Model '{self.model}' not found, pulling from Ollama registry...")
+            print(f"  - This may take several minutes depending on model size and your internet speed")
 
             response = requests.post(
                 f"{self.base_url}/api/pull",
                 json={"name": self.model},
                 stream=True,
-                timeout=600
+                timeout=1800  # 30 minute timeout for large models
             )
+
+            if response.status_code != 200:
+                print(f"  - ERROR: Failed to pull model (HTTP {response.status_code})")
+                return False
+
+            # Track progress
+            last_status = None
+            total_size = 0
+            completed_size = 0
 
             # Stream progress
             for line in response.iter_lines():
                 if line:
-                    import json
                     try:
                         data = json.loads(line)
                         status = data.get("status", "")
-                        if "downloading" in status.lower():
-                            # Show download progress
+
+                        # Update progress for downloading/pulling status
+                        if status in ["pulling manifest", "pulling"]:
+                            if status != last_status:
+                                print(f"\r  - {status.capitalize()}...", flush=True)
+                                last_status = status
+
+                        elif "downloading" in status.lower() or "digest:" in status:
+                            # Extract digest and progress
+                            digest = data.get("digest", "")
                             completed = data.get("completed", 0)
                             total = data.get("total", 0)
+
                             if total > 0:
+                                # Track total size across all layers
+                                if total > total_size:
+                                    total_size = total
+                                completed_size = completed
+
                                 percent = (completed / total) * 100
-                                print(f"  - Downloading: {percent:.1f}%", end="\r")
-                    except:
+                                completed_str = self._format_bytes(completed)
+                                total_str = self._format_bytes(total)
+
+                                # Show progress bar
+                                bar_width = 30
+                                filled = int(bar_width * completed / total)
+                                bar = '█' * filled + '░' * (bar_width - filled)
+
+                                print(f"\r  - Downloading: |{bar}| {percent:.1f}% ({completed_str}/{total_str})", end="", flush=True)
+
+                        elif status == "verifying sha256 digest":
+                            print(f"\r  - Verifying download...                                                  ", flush=True)
+
+                        elif status == "success":
+                            print(f"\r  - Model pulled successfully!                                              ", flush=True)
+
+                    except json.JSONDecodeError:
+                        pass
+                    except Exception as e:
+                        # Don't fail on progress parsing errors
                         pass
 
-            print(f"\n  - Model {self.model} pulled successfully")
+            print(f"\n  - Model {self.model} is now ready to use")
             return True
 
+        except requests.exceptions.Timeout:
+            print(f"\n  - ERROR: Model pull timed out (model may be too large or connection too slow)")
+            print(f"  - Try pulling manually: ollama pull {self.model}")
+            return False
         except Exception as e:
-            print(f"  - Error ensuring model availability: {e}")
+            print(f"\n  - ERROR: Failed to pull model: {type(e).__name__}: {str(e)}")
+            print(f"  - Try pulling manually: ollama pull {self.model}")
             return False
 
     def initialize(self) -> bool:

@@ -69,11 +69,16 @@ class OllamaProvider(LLMProvider):
 
         # Model configuration
         self.model = ollama_config.get("model") or config.get("model", "llama3.2:3b")
+        # Timeout priority: provider-specific > common llm.timeout > default 30
         self.timeout = ollama_config.get("timeout") or config.get("timeout", 30)
+
+        # Print configuration for visibility
+        print(f"  - Ollama config: model={self.model}, timeout={self.timeout}s")
 
         # Auto-manage Ollama or use external URL
         self.base_url = ollama_config.get("base_url")
         self.manager = None
+        self._model_checked = False  # Track if we've already checked/pulled the model
 
         if not self.base_url:
             # Auto-managed mode: Initialize Ollama manager
@@ -86,12 +91,85 @@ class OllamaProvider(LLMProvider):
                 raise RuntimeError("Failed to initialize Ollama. Please install manually from https://ollama.com/download")
 
             self.base_url = self.manager.base_url
+            self._model_checked = True  # Model was checked during initialize()
         else:
             # External mode: Use provided base_url (backward compatible)
             print(f"  - Using external Ollama server at {self.base_url}")
 
+    def _ensure_model(self) -> bool:
+        """
+        Ensure model is available before generating.
+        If using external server, checks if model exists and attempts to pull if not.
+
+        Returns:
+            True if model is available, False otherwise
+        """
+        # Skip if already checked
+        if self._model_checked:
+            return True
+
+        # For external servers, try to check and pull model if needed
+        if not self.manager:
+            try:
+                # Check if model exists via API tags endpoint
+                response = self.requests.get(f"{self.base_url}/api/tags", timeout=10)
+                if response.status_code == 200:
+                    models = response.json().get("models", [])
+                    model_names = [m.get("name", "") for m in models]
+
+                    if self.model in model_names:
+                        print(f"  - Model {self.model} found on external server")
+                        self._model_checked = True
+                        return True
+
+                    # Model not found - try to pull it
+                    print(f"  - Model {self.model} not found on external server, attempting to pull...")
+                    print(f"  - This may take several minutes depending on model size")
+
+                    pull_response = self.requests.post(
+                        f"{self.base_url}/api/pull",
+                        json={"name": self.model},
+                        stream=True,
+                        timeout=1800  # 30 minute timeout
+                    )
+
+                    if pull_response.status_code != 200:
+                        print(f"  - ERROR: Failed to pull model (HTTP {pull_response.status_code})")
+                        return False
+
+                    # Show simple progress
+                    import json
+                    for line in pull_response.iter_lines():
+                        if line:
+                            try:
+                                data = json.loads(line)
+                                status = data.get("status", "")
+                                if status and status != "pulling manifest":
+                                    completed = data.get("completed", 0)
+                                    total = data.get("total", 0)
+                                    if total > 0:
+                                        percent = (completed / total) * 100
+                                        print(f"\r  - Downloading: {percent:.1f}%", end="", flush=True)
+                            except:
+                                pass
+
+                    print(f"\n  - Model {self.model} pulled successfully")
+                    self._model_checked = True
+                    return True
+
+            except Exception as e:
+                print(f"  - Warning: Could not verify model availability: {e}")
+                # Continue anyway - let generate() fail with proper error if needed
+
+        self._model_checked = True
+        return True
+
     def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 0.0) -> str:
         """Generate text using Ollama"""
+        # Ensure model is available (checks and pulls if needed)
+        if not self._ensure_model():
+            raise RuntimeError(f"Model {self.model} is not available. Please pull it manually: ollama pull {self.model}")
+
         url = f"{self.base_url}/api/generate"
 
         payload = {
@@ -109,6 +187,13 @@ class OllamaProvider(LLMProvider):
             response.raise_for_status()
             result = response.json()
             return result.get("response", "").strip()
+        except self.requests.exceptions.HTTPError as e:
+            # Check if it's a model not found error
+            if e.response.status_code == 404:
+                raise RuntimeError(f"Model '{self.model}' not found on Ollama server. Please pull it: ollama pull {self.model}")
+            raise RuntimeError(f"Ollama API request failed: {e}")
+        except self.requests.exceptions.Timeout:
+            raise RuntimeError(f"Ollama request timed out after {self.timeout}s. Try increasing 'llm.ollama.timeout' in config")
         except Exception as e:
             raise RuntimeError(f"Ollama API request failed: {e}")
 
@@ -165,20 +250,42 @@ def create_llm_provider(config: Dict[str, Any], stage_name: Optional[str] = None
 
     Args:
         config: Full pipeline configuration
-        stage_name: Optional stage name to use stage-specific LLM config
+        stage_name: Optional stage name to use stage-specific LLM config (e.g., "text_polishing", "segment_splitting")
 
     Returns:
         LLMProvider instance or None if provider cannot be created
-    """
-    llm_config = config.get("llm", {})
 
-    # Check for stage-specific provider override
+    Stage-specific overrides supported:
+    - llm_provider: Override provider (e.g., use Ollama for splitting, Claude for polishing)
+    - llm_timeout: Override timeout for this stage (useful for large models or complex tasks)
+    """
+    llm_config = config.get("llm", {}).copy()  # Copy to avoid modifying original
+
+    # Check for stage-specific overrides
     if stage_name:
         stage_config = config.get(stage_name, {})
+
+        # Override provider if specified
         if "llm_provider" in stage_config:
-            # Stage overrides provider - use global llm config with different provider
             provider_name = stage_config.get("llm_provider")
-            llm_config = {**llm_config, "provider": provider_name}
+            llm_config["provider"] = provider_name
+
+        # Override timeout if specified (allows longer timeout for specific stages)
+        if "llm_timeout" in stage_config:
+            timeout = stage_config.get("llm_timeout")
+            # Apply timeout to both common config and provider-specific config
+            llm_config["timeout"] = timeout  # Common timeout
+            # Apply timeout to provider-specific config for backwards compatibility
+            provider_name = llm_config.get("provider", "anthropic").lower()
+            if provider_name == "ollama":
+                if "ollama" not in llm_config:
+                    llm_config["ollama"] = {}
+                llm_config["ollama"]["timeout"] = timeout
+            elif provider_name == "openai":
+                if "openai" not in llm_config:
+                    llm_config["openai"] = {}
+                llm_config["openai"]["timeout"] = timeout
+            # Note: Anthropic SDK handles timeouts internally
 
     provider_name = llm_config.get("provider", "anthropic").lower()
 

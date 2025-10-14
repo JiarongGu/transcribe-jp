@@ -49,6 +49,11 @@ def polish_segments_with_llm(segments, config):
             batch = segments[i:i + batch_size]
             batch_num = i // batch_size + 1
 
+            # Track batch status for summary
+            batch_success = False
+            batch_error_msg = None
+            one_by_one_success = 0
+
             # Extract texts for polishing
             texts = []
             for seg in batch:
@@ -99,14 +104,15 @@ JSON形式で、整形後のテキストを配列で返してください。
                         else:
                             polished_segments.append(seg)
 
-                # Update progress bar
-                _print_progress(len(polished_segments), total_segments)
+                batch_success = True
 
             except Exception as e:
                 # Batch failed, try individually
-                print(f"\r    Batch {batch_num} failed ({type(e).__name__}: {str(e)[:80]}), retrying individually...", end="", flush=True)
+                batch_error_msg = f"{type(e).__name__}: {str(e)[:100]}"
+                print(f"\r    Batch {batch_num} failed ({batch_error_msg})", flush=True)
+                print(f"    Retrying {len(batch)} segments individually...", flush=True)
+
                 # Try polishing one-by-one
-                one_by_one_success = 0
                 for j, seg in enumerate(batch):
                     if len(seg) >= 3:
                         text = seg[2]
@@ -148,17 +154,23 @@ JSON形式で、整形後のテキストを配列で返してください。
 
                         except Exception as e2:
                             # Keep original segment if one-by-one also fails
+                            error_details = f"{type(e2).__name__}: {str(e2)[:100]}"
+                            print(f"    WARNING: Segment {j+1}/{len(batch)} failed: {error_details}", flush=True)
+                            print(f"             Text: {text[:80]}...", flush=True)
                             polished_segments.append(seg)
                     else:
                         # Keep segments without text unchanged
                         polished_segments.append(seg)
 
-                # Update progress bar after individual retry
-                _print_progress(len(polished_segments), total_segments)
+            # Update progress bar once per batch (after both success and failure paths)
+            _print_progress(len(polished_segments), total_segments)
+
+            # Print batch summary if there were failures
+            if not batch_success:
                 if one_by_one_success > 0:
-                    print(f"    ({one_by_one_success}/{len(batch)} succeeded in retry)")
+                    print(f"    Batch {batch_num}: {one_by_one_success}/{len(batch)} segments succeeded in individual retry")
                 else:
-                    print(f"    (batch failed - all retries failed)")
+                    print(f"    Batch {batch_num}: All {len(batch)} segments failed (using original text)")
 
         print(f"  - Completed: {len(polished_segments)}/{total_segments} segments polished")
         return polished_segments

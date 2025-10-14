@@ -195,6 +195,51 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 
 ## Session History & Lessons Learned
 
+### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout Config
+
+**What was done:**
+1. **Fixed progress bar duplication** in text polishing one-by-one mode
+2. **Improved error reporting** - shows error type, segment number, actual text
+3. **Added automatic model pulling with progress bar** for Ollama
+4. **Added flexible timeout configuration** - common, provider-specific, stage-specific
+5. **Updated config.json** with recommended settings for qwen3:32b
+
+**The problem:**
+- Progress bar displayed twice during one-by-one processing
+- Error messages didn't show WHY batches were failing
+- Models weren't auto-pulled when missing - pipeline just failed
+- 30-second timeout too short for large models (qwen3:32b = 32B parameters)
+- No way to set different timeouts for different stages
+
+**The solution:**
+1. **Progress bar:** Moved `_print_progress()` to single location after both code paths
+2. **Error reporting:** Added error type/message, segment number, actual failing text
+3. **Model pulling:** Added `_ensure_model()` that checks and auto-pulls with progress bar
+4. **Timeout config:** Three-level priority system (stage > provider > common > default)
+5. **Config update:** `timeout: 60` global, `llm_timeout: 180` for text polishing
+
+**Key lessons:**
+- ✅ Progress bars should be called once per iteration, not in multiple code paths
+- ✅ Error messages should show WHAT failed, WHERE, and WHY (error type + message)
+- ✅ Large models (32B+) need 2-5 minutes timeout, not 30 seconds
+- ✅ Different stages have different performance needs (splitting fast, polishing slow)
+- ✅ Auto-pulling models with progress bar improves UX dramatically
+- ✅ Timeout should be configurable at multiple levels (global, provider, stage)
+- ❌ DON'T hardcode timeouts - models vary from 2B to 32B+ parameters
+
+**Files modified:**
+- modules/stage7_text_polishing/processor.py - Progress bar fix + error reporting
+- shared/ollama_manager.py - Enhanced model pulling with progress bar
+- shared/llm_utils.py - Added `_ensure_model()`, stage-specific timeout support
+- docs/features/LLM_PROVIDERS.md - Timeout configuration documentation
+- config.json - Updated with timeout: 60, batch_size: 1, llm_timeout: 180
+
+**Test results:** ✅ 280/280 tests pass (no regressions)
+**Impact:**
+- Clear error diagnosis (can see timeout, JSON parsing, connection errors)
+- Auto model pulling (no manual "ollama pull" needed)
+- Large models work reliably (proper timeout for 32B models)
+
 ### Session 2025-10-14: Batch Processing Control + Ollama Pre-Flight Validation
 
 **What was done:**

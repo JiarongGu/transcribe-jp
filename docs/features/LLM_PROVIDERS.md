@@ -60,7 +60,7 @@ You can now choose from **three LLM providers**:
 **What happens automatically after installation:**
 1. ✅ Validates Ollama is installed before starting pipeline
 2. ✅ Starts Ollama server as subprocess
-3. ✅ Downloads model if not already available
+3. ✅ **Automatically pulls model if not available (with progress bar)**
 4. ✅ Ready to use!
 
 ### Option 2: Cloud API (Anthropic)
@@ -148,8 +148,14 @@ Use FREE Ollama for splitting, paid Claude for polishing:
 **What happens automatically after you install Ollama:**
 1. ✅ Validates Ollama is installed (shows error if not)
 2. ✅ Starts Ollama server as subprocess
-3. ✅ Pulls the specified model (if not already downloaded)
+3. ✅ **Automatically pulls the specified model with progress bar** (if not already downloaded)
 4. ✅ Ready to use!
+
+**Model pulling features:**
+- Shows download progress bar with percentage and size (e.g., "Downloading: |████░░| 45.2% (1.2GB/2.6GB)")
+- Displays verification status
+- Handles large models with 30-minute timeout
+- Works for both auto-managed and external servers
 
 **Setup - EXTERNAL SERVER (optional):**
 
@@ -198,13 +204,22 @@ If you prefer to manage Ollama server yourself or use a remote server:
 {
   "ollama": {
     "model": "llama3.2:3b",                           // Model name (required)
-    "timeout": 30,                                    // Request timeout (seconds)
+    "timeout": 30,                                    // Request timeout in seconds (default: 30)
     "base_url": "http://localhost:11434"             // Optional: Use external Ollama server
   }
 }
 ```
 
-**Note:** `base_url` is optional. If omitted, Ollama is automatically managed as a subprocess.
+**Notes:**
+- `base_url` is optional. If omitted, Ollama is automatically managed as a subprocess.
+- `timeout` controls how long to wait for each LLM request. Increase for larger models:
+  - **Small models (2-3B):** 30-60 seconds
+  - **Medium models (7-8B):** 60-120 seconds
+  - **Large models (32B+):** 120-300 seconds
+
+**Timeout tips for large models:**
+- If you see "Ollama request timed out" errors, increase the timeout
+- You can also override timeout per stage (see "Stage-Specific Timeout Override" below)
 
 **Performance tip for Ollama:**
 
@@ -329,7 +344,9 @@ This disables batch processing and processes each segment individually, which is
 
 ---
 
-## Stage-Specific Provider Override
+## Stage-Specific Overrides
+
+### Provider Override
 
 You can use **different providers for different stages** to optimize cost vs. quality:
 
@@ -361,6 +378,61 @@ You can use **different providers for different stages** to optimize cost vs. qu
 2. Stage-specific `llm_provider` overrides for that stage
 3. All provider settings come from the global `llm.{provider}` section
 
+### Timeout Override
+
+You can also override the **timeout per stage** for large models or complex tasks:
+
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "ollama": {
+      "model": "qwen3:32b",
+      "timeout": 60  // Default timeout for all stages
+    }
+  },
+  "segment_splitting": {
+    "enable_llm": true
+    // Uses default 60s timeout (splitting is fast)
+  },
+  "text_polishing": {
+    "enable": true,
+    "llm_timeout": 180  // Override: 3 minutes for polishing (slower task with 32B model)
+  }
+}
+```
+
+**When to use timeout override:**
+- ✅ Using large models (13B, 32B+) for text polishing
+- ✅ Text polishing takes longer than segment splitting
+- ✅ Batch processing with large batch sizes
+- ✅ Running on CPU instead of GPU
+
+**Example configurations:**
+
+**Small model (3B), GPU:**
+```json
+{
+  "llm": { "ollama": { "model": "llama3.2:3b", "timeout": 30 } }
+}
+```
+
+**Large model (32B), GPU:**
+```json
+{
+  "llm": { "ollama": { "model": "qwen3:32b", "timeout": 60 } },
+  "text_polishing": { "llm_timeout": 180 }  // 3 minutes for polishing
+}
+```
+
+**Large model (32B), CPU:**
+```json
+{
+  "llm": { "ollama": { "model": "qwen3:32b", "timeout": 120 } },
+  "text_polishing": { "llm_timeout": 300 }  // 5 minutes for polishing
+}
+```
+
 ---
 
 ## Cost Comparison
@@ -391,10 +463,11 @@ Approximate costs for processing **1 hour of audio transcription**:
     "provider": "ollama",                  // Default provider
     "max_tokens": 1024,                    // Max response length
     "temperature": 0.0,                    // Randomness (0=deterministic)
+    "timeout": 60,                         // Common timeout for all providers (optional)
 
     "ollama": {
       "model": "llama3.2:3b",              // Auto-managed (no base_url needed)
-      "timeout": 30
+      "timeout": 30                        // Provider-specific timeout (overrides common)
     },
 
     "anthropic": {
@@ -411,6 +484,12 @@ Approximate costs for processing **1 hour of audio transcription**:
   }
 }
 ```
+
+**Timeout priority:**
+1. Stage-specific `llm_timeout` (highest priority)
+2. Provider-specific `ollama.timeout` or `openai.timeout`
+3. Common `llm.timeout` (applies to all providers)
+4. Default 30 seconds (lowest priority)
 
 ### Stage-Specific Override
 
@@ -465,10 +544,11 @@ Approximate costs for processing **1 hour of audio transcription**:
 **Problem:** Model download taking too long
 
 **Solution:**
-- First download is ~2GB for llama3.2:3b
+- First download is ~2GB for llama3.2:3b (progress bar shows download speed)
 - Use smaller model: `gemma2:2b` (1.6GB)
 - Check internet connection
-- Download manually: `ollama pull llama3.2:3b`
+- transcribe-jp will automatically pull the model with progress display
+- Or download manually if preferred: `ollama pull llama3.2:3b`
 
 ### Ollama: "Connection refused" (manual mode)
 
@@ -527,13 +607,54 @@ Disable batch processing by setting `batch_size: 1`:
 
 This forces one-by-one processing, which is more reliable for local LLM providers.
 
+### Ollama: "Request timed out" error
+
+**Problem:** You see "Ollama request timed out after 30s" errors
+
+**Solution:**
+
+1. **Increase global timeout** for the model:
+   ```json
+   {
+     "llm": {
+       "ollama": {
+         "model": "qwen3:32b",
+         "timeout": 120  // Increase to 2 minutes
+       }
+     }
+   }
+   ```
+
+2. **Or override timeout for text polishing only** (recommended for large models):
+   ```json
+   {
+     "llm": {
+       "ollama": {
+         "model": "qwen3:32b",
+         "timeout": 60  // Default timeout
+       }
+     },
+     "text_polishing": {
+       "enable": true,
+       "llm_timeout": 180  // 3 minutes just for text polishing
+     }
+   }
+   ```
+
+**Recommended timeouts by model size:**
+- **2-3B models (GPU):** 30-60 seconds
+- **7-8B models (GPU):** 60-120 seconds
+- **32B+ models (GPU):** 120-300 seconds
+- **Any model (CPU):** 2-5x longer than GPU
+
 ### Performance: Slow generation
 
 **Ollama:**
-- Use smaller model: `gemma2:2b`
+- Use smaller model: `gemma2:2b` or `llama3.2:3b`
 - Check GPU usage
 - Ensure adequate RAM
-- Disable batch processing: `batch_size: 1` (more reliable but slower)
+- Disable batch processing: `batch_size: 1` (more reliable)
+- **Increase timeout** if getting timeout errors (see above)
 
 **Cloud APIs:**
 - Check internet connection
@@ -551,7 +672,7 @@ A: Start with **Ollama** (free, auto-managed). Upgrade to Anthropic Claude if qu
 A: Yes! You must install Ollama manually before using it with transcribe-jp. Download from https://ollama.com/download.
 
 **Q: What happens on first run with Ollama?**
-A: The system automatically: (1) Validates Ollama is installed, (2) Starts Ollama server, (3) Downloads model (~2GB for llama3.2:3b).
+A: The system automatically: (1) Validates Ollama is installed, (2) Starts Ollama server, (3) **Pulls the model with progress bar** showing download percentage and size (~2GB for llama3.2:3b).
 
 **Q: Can I use my existing Ollama installation?**
 A: Yes! transcribe-jp detects and uses your existing Ollama installation. Or specify `base_url` to use an external server.
