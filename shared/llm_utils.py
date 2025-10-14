@@ -43,7 +43,23 @@ class AnthropicProvider(LLMProvider):
         self.model = anthropic_config.get("model") or config.get("model", "claude-3-5-haiku-20241022")
 
     def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 0.0) -> str:
-        """Generate text using Anthropic Claude"""
+        """
+        Generate text using Anthropic Claude
+
+        Args:
+            prompt: The input prompt
+            max_tokens: Maximum tokens to generate (0 = use 4096 as reasonable default)
+            temperature: Sampling temperature
+
+        Returns:
+            Generated text response
+
+        Note: Anthropic requires max_tokens, so 0 is converted to 4096 (reasonable default)
+        """
+        # Anthropic requires max_tokens parameter, use reasonable default if 0
+        if max_tokens == 0:
+            max_tokens = 4096  # Reasonable default for unlimited intent
+
         message = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
@@ -165,21 +181,34 @@ class OllamaProvider(LLMProvider):
         return True
 
     def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 0.0) -> str:
-        """Generate text using Ollama"""
+        """
+        Generate text using Ollama
+
+        Args:
+            prompt: The input prompt
+            max_tokens: Maximum tokens to generate (0 = unlimited)
+            temperature: Sampling temperature
+
+        Returns:
+            Generated text response
+        """
         # Ensure model is available (checks and pulls if needed)
         if not self._ensure_model():
             raise RuntimeError(f"Model {self.model} is not available. Please pull it manually: ollama pull {self.model}")
 
         url = f"{self.base_url}/api/generate"
 
+        # Build options - if max_tokens is 0, omit num_predict for unlimited generation
+        options = {"temperature": temperature}
+        if max_tokens > 0:
+            options["num_predict"] = max_tokens
+        # If max_tokens == 0, Ollama uses its default (no limit)
+
         payload = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_predict": max_tokens
-            }
+            "options": options
         }
 
         try:
@@ -234,7 +263,23 @@ class OpenAIProvider(LLMProvider):
         self.model = openai_config.get("model") or config.get("model", "gpt-4o-mini")
 
     def generate(self, prompt: str, max_tokens: int = 1024, temperature: float = 0.0) -> str:
-        """Generate text using OpenAI"""
+        """
+        Generate text using OpenAI
+
+        Args:
+            prompt: The input prompt
+            max_tokens: Maximum tokens to generate (0 = None/unlimited, up to model's limit)
+            temperature: Sampling temperature
+
+        Returns:
+            Generated text response
+
+        Note: OpenAI allows None for max_tokens, which means no limit (up to model's context)
+        """
+        # OpenAI allows None for max_tokens (no limit, up to model context)
+        if max_tokens == 0:
+            max_tokens = None
+
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],

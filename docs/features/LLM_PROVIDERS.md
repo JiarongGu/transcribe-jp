@@ -223,10 +223,14 @@ If you prefer to manage Ollama server yourself or use a remote server:
 
 **max_tokens tips:**
 - `max_tokens` controls the maximum response length from the LLM
+- **Set to 0 for unlimited** (no token limit - useful for large batches or long responses)
+  - **Ollama**: Omits `num_predict` parameter, lets model generate freely
+  - **Anthropic**: Uses 4096 tokens (reasonable default, since Claude requires a limit)
+  - **OpenAI**: Uses None (no limit, up to model's context window)
 - **For batch_size=1:** 1024 tokens is sufficient (single segment response)
-- **For batch_size=10:** May need 2048-4096 tokens (10 segments in JSON array)
-- If you see incomplete JSON responses or cut-off text, increase `max_tokens`
-- **Recommendation:** Use `batch_size: 1` for Ollama (more reliable, avoids max_tokens concerns)
+- **For batch_size=10:** May need 2048-4096 tokens (10 segments in JSON array), or set to 0
+- If you see incomplete JSON responses or cut-off text, increase `max_tokens` or set to 0
+- **Recommendation:** Use `batch_size: 1` with `max_tokens: 1024` for Ollama (most reliable)
 
 **Performance tip for Ollama:**
 
