@@ -90,7 +90,14 @@ JSON形式で、整形後のテキストを配列で返してください。
 
                 # Parse JSON response
                 result = parse_json_response(response_text)
-                polished_texts = result.get("polished", texts)
+
+                # Handle both dict {"polished": [...]} and direct list [...]
+                if isinstance(result, list):
+                    polished_texts = result
+                elif isinstance(result, dict):
+                    polished_texts = result.get("polished", texts)
+                else:
+                    polished_texts = texts
 
                 # Replace texts in segments
                 for j, polished_text in enumerate(polished_texts):
@@ -141,7 +148,14 @@ JSON形式で、整形後のテキストを配列で返してください。
 
                             # Parse JSON response
                             result = parse_json_response(response_text)
-                            polished_text = result.get("polished", [text])[0]
+
+                            # Handle both dict {"polished": [...]} and direct list [...]
+                            if isinstance(result, list):
+                                polished_text = result[0] if result else text
+                            elif isinstance(result, dict):
+                                polished_text = result.get("polished", [text])[0]
+                            else:
+                                polished_text = text
 
                             # Add polished segment
                             if len(seg) == 4:

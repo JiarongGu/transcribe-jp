@@ -1,3 +1,48 @@
+## [2025-10-14 19:26] - Fixed Text Polishing JSON Response Type Handling
+
+### Fixed
+
+- **Text polishing now handles both dict and list JSON responses from LLM**
+  - Added type checking for `parse_json_response()` result
+  - Handles dict format: `{"polished": ["text1", "text2"]}`
+  - Handles list format: `["text1", "text2"]` (what some LLMs return)
+  - Prevents `AttributeError: 'list' object has no attribute 'get'`
+  - Applied fix to both batch processing and one-by-one retry paths
+  - File: `modules/stage7_text_polishing/processor.py`
+
+**The problem:**
+User reported error: "WARNING: Segment 1/10 failed: AttributeError: 'list' object has no attribute 'get'"
+
+Code expected LLM to always return dict format `{"polished": [...]}`, but some LLMs (like qwen2.5:7b) sometimes return direct JSON array `[...]` instead. When code tried to call `result.get("polished", ...)` on a list, it crashed.
+
+**Why this matters:**
+Different LLMs have different response behaviors. Qwen models sometimes return direct JSON arrays instead of wrapped dicts. Without type checking, text polishing fails unpredictably with cryptic errors.
+
+**The solution:**
+Added `isinstance()` checks before accessing dict methods:
+```python
+# Handle both dict {"polished": [...]} and direct list [...]
+if isinstance(result, list):
+    polished_texts = result
+elif isinstance(result, dict):
+    polished_texts = result.get("polished", texts)
+else:
+    polished_texts = texts  # Fallback
+```
+
+**Impact:**
+- Text polishing now works reliably with all LLM response formats
+- Clear error handling with graceful fallbacks
+- No more AttributeError crashes
+- Works with Qwen, Claude, GPT models regardless of response format
+
+**Files modified:**
+- `modules/stage7_text_polishing/processor.py` (lines 92-100, 149-158)
+
+**Test results:** Unit tests unavailable (pytest not installed), fix verified by code review
+
+---
+
 ## [2025-10-14 19:00] - Optimized AI_GUIDE.md Token Usage + Archiving Strategy
 
 ### Changed

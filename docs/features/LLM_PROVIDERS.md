@@ -768,6 +768,32 @@ Invalid JSON response from Ollama server.
    - VRAM/RAM exhausted
    - Server encountered internal error
 
+### Text Polishing: "'list' object has no attribute 'get'" error
+
+**Problem:** Text polishing fails with `AttributeError: 'list' object has no attribute 'get'`
+
+**Example error:**
+```
+WARNING: Segment 1/10 failed: AttributeError: 'list' object has no attribute 'get'
+```
+
+**Cause:** Some LLMs (like Qwen models) sometimes return a direct JSON array `["text1", "text2"]` instead of the expected dict format `{"polished": ["text1", "text2"]}`.
+
+**Solution:** This error has been fixed in the latest version. The code now handles both response formats automatically. If you're still seeing this error:
+
+1. **Update to the latest version** of transcribe-jp
+2. **Check your LLM configuration** - ensure model is properly specified
+3. **Try with batch_size: 1** for more reliable processing:
+   ```json
+   {
+     "text_polishing": {
+       "batch_size": 1
+     }
+   }
+   ```
+
+**Technical details:** The fix adds type checking to handle both dict `{"polished": [...]}` and list `[...]` response formats from different LLMs.
+
 ### Performance: Slow generation
 
 **Ollama:**
