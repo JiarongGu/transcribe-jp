@@ -21,7 +21,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 
 ## 6 Critical Rules (Non-Negotiable)
 
-1. **ALWAYS run tests before committing** - All 270+ tests must pass
+1. **ALWAYS run tests before committing** - All 280+ tests must pass
    ```bash
    python -X utf8 -m pytest tests/unit/ -q --tb=line
    ```
@@ -124,7 +124,7 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
 ## Key Facts
 
 - **9-stage Japanese transcription pipeline** - Whisper → processing → VTT output
-- **275 tests** - 270 unit + 4 E2E + 1 smoke test (all must pass before committing)
+- **285 tests** - 280 unit + 4 E2E + 1 smoke test (all must pass before committing)
 - **Japanese-specific** - Particle variations, no spaces, sentence structure
 - **Stage order is critical** - Filtering before realignment, polishing after
 - **Test command:** `python -X utf8 -m pytest tests/unit/ -q --tb=line`
@@ -195,14 +195,15 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 
 ## Session History & Lessons Learned
 
-### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout Config
+### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout + Unlimited Tokens
 
 **What was done:**
 1. **Fixed progress bar duplication** in text polishing one-by-one mode
 2. **Improved error reporting** - shows error type, segment number, actual text
 3. **Added automatic model pulling with progress bar** for Ollama
 4. **Added flexible timeout configuration** - common, provider-specific, stage-specific
-5. **Updated config.json** with recommended settings for qwen3:32b
+5. **Added unlimited max_tokens feature** - set to 0 for no token limit
+6. **Updated config.json** with recommended settings for qwen3:32b
 
 **The problem:**
 - Progress bar displayed twice during one-by-one processing
@@ -210,13 +211,15 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 - Models weren't auto-pulled when missing - pipeline just failed
 - 30-second timeout too short for large models (qwen3:32b = 32B parameters)
 - No way to set different timeouts for different stages
+- max_tokens limit could cause incomplete responses with large batches
 
 **The solution:**
 1. **Progress bar:** Moved `_print_progress()` to single location after both code paths
 2. **Error reporting:** Added error type/message, segment number, actual failing text
 3. **Model pulling:** Added `_ensure_model()` that checks and auto-pulls with progress bar
 4. **Timeout config:** Three-level priority system (stage > provider > common > default)
-5. **Config update:** `timeout: 60` global, `llm_timeout: 180` for text polishing
+5. **Unlimited tokens:** `max_tokens: 0` → Ollama omits limit, Anthropic uses 4096, OpenAI uses None
+6. **Config update:** `timeout: 60` global, `llm_timeout: 180` for text polishing, `batch_size: 1`
 
 **Key lessons:**
 - ✅ Progress bars should be called once per iteration, not in multiple code paths
@@ -225,13 +228,17 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 - ✅ Different stages have different performance needs (splitting fast, polishing slow)
 - ✅ Auto-pulling models with progress bar improves UX dramatically
 - ✅ Timeout should be configurable at multiple levels (global, provider, stage)
+- ✅ max_tokens=0 for unlimited prevents cut-off responses with large batches
 - ❌ DON'T hardcode timeouts - models vary from 2B to 32B+ parameters
+- ❌ DON'T assume 1024 tokens is enough for all batch sizes - scale with batch_size or use 0
 
 **Files modified:**
 - modules/stage7_text_polishing/processor.py - Progress bar fix + error reporting
 - shared/ollama_manager.py - Enhanced model pulling with progress bar
-- shared/llm_utils.py - Added `_ensure_model()`, stage-specific timeout support
-- docs/features/LLM_PROVIDERS.md - Timeout configuration documentation
+- shared/llm_utils.py - Added `_ensure_model()`, timeout support, max_tokens=0 support
+- docs/features/LLM_PROVIDERS.md - Timeout + max_tokens documentation
+- docs/core/CONFIGURATION.md - Updated LLM parameter docs
+- docs/ai-assistant/REFERENCE.md - Added LLM quick reference
 - config.json - Updated with timeout: 60, batch_size: 1, llm_timeout: 180
 
 **Test results:** ✅ 280/280 tests pass (no regressions)

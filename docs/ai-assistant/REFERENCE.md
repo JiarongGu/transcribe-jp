@@ -121,6 +121,38 @@ python main.py input.mp4 --stages 1-6
 - `condition_on_previous_text: false` - Prevents error propagation
 - `initial_prompt` - Reduces hallucinations, improves punctuation
 
+### LLM Settings
+
+```json
+{
+  "llm": {
+    "provider": "ollama",
+    "max_tokens": 1024,
+    "temperature": 0.0,
+    "timeout": 60,
+    "ollama": {
+      "model": "llama3.2:3b"
+    }
+  },
+  "text_polishing": {
+    "enable": true,
+    "batch_size": 1,
+    "llm_timeout": 180
+  }
+}
+```
+
+**Key settings:**
+- `max_tokens: 0` - Unlimited tokens (no limit, useful for large batches)
+- `timeout` - Request timeout (stage > provider > common > default 30s)
+- `llm_timeout` - Stage-specific timeout override (e.g., 180s for text polishing with large models)
+- `batch_size: 1` - Recommended for Ollama (more reliable than batching)
+
+**Timeout guidelines:**
+- 2-3B models: 30-60s
+- 7-8B models: 60-120s
+- 32B+ models: 120-300s
+
 ---
 
 ## Key File Locations
@@ -284,7 +316,7 @@ class Segment:
 
 ## Test Coverage Stats
 
-**Current:** 275 tests (270 unit + 4 E2E + 1 smoke)
+**Current:** 285 tests (280 unit + 4 E2E + 1 smoke)
 
 **By module:**
 - Stage 1: Preprocessing

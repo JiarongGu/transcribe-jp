@@ -355,6 +355,7 @@ LLM-based text refinement for natural Japanese.
 | `enable` | boolean | `true` | Enable LLM text polishing |
 | `batch_size` | integer | `10` | Segments per API call. Set to `1` or `0` to disable batching (process one-by-one, recommended for Ollama) |
 | `llm_provider` | string | `null` | Override global LLM provider for this stage (optional) |
+| `llm_timeout` | integer | `null` | Override timeout for this stage in seconds (optional, useful for large models) |
 
 **What it does:**
 - Fixes grammar and particle usage
@@ -428,13 +429,18 @@ Connection settings for LLM providers (used in Stages 4 and 6).
 |-----------|------|---------|-------------|
 | `provider` | string | `"ollama"` | LLM provider: `"ollama"`, `"anthropic"`, or `"openai"` |
 | `model` | string | `"llama3.2:3b"` | Model name (provider-specific) |
-| `max_tokens` | integer | `1024` | Max tokens per API response |
+| `max_tokens` | integer | `1024` | Max tokens per API response. Set to `0` for unlimited (recommended for large batches) |
 | `temperature` | float | `0.0` | Sampling temperature (0 = deterministic) |
+| `timeout` | integer | `30` | Request timeout in seconds (applies to all providers, can be overridden per-provider) |
 | `ollama_base_url` | string | `"http://localhost:11434"` | Ollama server URL (only for Ollama) |
-| `timeout` | integer | `30` | Request timeout in seconds (only for Ollama) |
 | `anthropic_api_key` | string | `""` | Claude API key (only for Anthropic) |
 | `api_key_env` | string | `"ANTHROPIC_API_KEY"` | Environment variable for API key |
 | `openai_api_key` | string | `""` | OpenAI API key (only for OpenAI) |
+
+**Important Notes:**
+- **max_tokens=0 for unlimited**: Ollama omits `num_predict`, Anthropic uses 4096, OpenAI uses None (up to context window)
+- **Timeout priority**: stage-specific `llm_timeout` > provider-specific `ollama.timeout` > common `llm.timeout` > default 30s
+- **Recommended timeouts by model size**: 2-3B models = 30-60s, 7-8B = 60-120s, 32B+ = 120-300s
 
 #### Provider: Ollama (Local, FREE)
 
