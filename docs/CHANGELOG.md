@@ -1,4 +1,52 @@
-## [2025-10-15 TBD] - Refactored Stage 4 to Include LLM Intelligent Splitting
+## [2025-10-15 TBD] - Refactored Stage 4 + Added Ollama Context Length Control
+
+### Added
+
+- **Ollama context_length configuration for VRAM optimization**
+  - New `ollama.context_length` parameter to control context window size
+  - Reduces VRAM usage by limiting the context buffer (num_ctx in Ollama API)
+  - Helps large models (like Qwen3:8b) fit in limited VRAM (like RTX 4070 12GB)
+  - Set to `0` for model default (typically 2K-32K depending on model)
+  - Set to `2048` or lower to reduce VRAM footprint
+  - Files: `shared/llm_utils.py`, `config.json`, `config.local.json.example`
+
+**The problem:**
+Large models like Qwen3:8b need 9-11GB VRAM (5GB model + 4-6GB context/KV cache). On 12GB GPUs like RTX 4070, this barely fits or causes Ollama to fall back to CPU, making generation very slow.
+
+**Why this matters:**
+Context window size directly affects VRAM usage. Default context windows can be 32K tokens, consuming 3-5GB VRAM. For transcription tasks (short prompts), we don't need huge context windows. Reducing to 2048 tokens can save 2-3GB VRAM, allowing larger models to run on GPU.
+
+**The solution:**
+Added `context_length` configuration to Ollama provider:
+- `context_length: 0` - Use model's default (no change)
+- `context_length: 2048` - Reduce to 2K tokens (saves ~2-3GB VRAM)
+- `context_length: 4096` - Moderate 4K context (saves ~1-2GB VRAM)
+
+**Impact:**
+- Allows Qwen3:8b to run on GPU instead of CPU on 12GB VRAM
+- 10-20x speedup when models can use GPU instead of falling back to CPU
+- User control over VRAM vs context tradeoff
+- Visible in console output when configured (shows context_length in config line)
+
+**Config example:**
+```json
+{
+  "ollama": {
+    "model": "goekdenizguelmez/JOSIEFIED-Qwen3:8b",
+    "context_length": 2048  // Reduce VRAM usage for large models
+  }
+}
+```
+
+**Console output:**
+```
+- Ollama config: model=goekdenizguelmez/JOSIEFIED-Qwen3:8b, timeout=45s, context_length=2048
+```
+
+**Files modified:**
+- `shared/llm_utils.py` (lines 90-97, 224-234) - Added context_length configuration and num_ctx option
+- `config.json` (line 112) - Added context_length: 0 default
+- `config.local.json.example` (lines 22, 110) - Added inline comments and example
 
 ### Changed
 

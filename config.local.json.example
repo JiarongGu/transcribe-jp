@@ -19,6 +19,7 @@
       // "base_url": "http://localhost:11434"  // Optional: Use external Ollama server
       // "executable_path": "D:\\CustomPath\\ollama.exe"  // Optional: Custom Ollama installation path
       // "timeout": 45         // Optional: Override timeout for Ollama (useful for large models)
+      // "context_length": 2048  // Optional: Reduce context window to save VRAM (0 = model default, typically 2K-32K)
     },
 
     "anthropic": {
@@ -105,7 +106,8 @@
   //     "timeout": 90,
   //     "ollama": {
   //       "model": "qwen3:8b",
-  //       "executable_path": "D:\\CustomApps\\Ollama\\ollama.exe"  // For non-standard installations
+  //       "executable_path": "D:\\CustomApps\\Ollama\\ollama.exe",  // For non-standard installations
+  //       "context_length": 2048  // Reduce VRAM usage for large models (default: model-specific, typically 2K-32K)
   //     }
   //   },
   //   "text_polishing": {

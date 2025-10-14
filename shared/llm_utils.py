@@ -87,9 +87,14 @@ class OllamaProvider(LLMProvider):
         self.model = ollama_config.get("model") or config.get("model", "llama3.2:3b")
         # Timeout priority: provider-specific > common llm.timeout > default 30
         self.timeout = ollama_config.get("timeout") or config.get("timeout", 30)
+        # Context length (0 = use model's default, typically 2048-32768)
+        self.context_length = ollama_config.get("context_length", 0)
 
         # Print configuration for visibility
-        print(f"  - Ollama config: model={self.model}, timeout={self.timeout}s")
+        config_str = f"model={self.model}, timeout={self.timeout}s"
+        if self.context_length > 0:
+            config_str += f", context_length={self.context_length}"
+        print(f"  - Ollama config: {config_str}")
 
         # Auto-manage Ollama or use external URL
         self.base_url = ollama_config.get("base_url")
@@ -216,11 +221,17 @@ class OllamaProvider(LLMProvider):
 
         url = f"{self.base_url}/api/generate"
 
-        # Build options - if max_tokens is 0, omit num_predict for unlimited generation
+        # Build options
         options = {"temperature": temperature}
+
+        # num_predict: max tokens to generate (0 = unlimited)
         if max_tokens > 0:
             options["num_predict"] = max_tokens
-        # If max_tokens == 0, Ollama uses its default (no limit)
+
+        # num_ctx: context window size (0 = use model default)
+        # Reducing context_length decreases VRAM usage, allowing larger models to fit in GPU
+        if self.context_length > 0:
+            options["num_ctx"] = self.context_length
 
         payload = {
             "model": self.model,
