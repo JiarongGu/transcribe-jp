@@ -30,16 +30,22 @@ This guide provides AI-specific context for working on transcribe-jp. It focuses
    - Add entry with Date + Time format: [2025-10-12 05:30]
    - Include: what changed, impact, files modified, test results
 
-3. **ALWAYS verify related documentation is updated**
+3. **ALWAYS verify related documentation is updated** ⚠️ CRITICAL - MOST VIOLATED RULE
    - After updating CHANGELOG, search: `grep -r "feature_name" docs/ --include="*.md"`
    - **Check ALL these locations:**
      - `docs/core/` (ARCHITECTURE.md, CONFIGURATION.md, PIPELINE_STAGES.md)
-     - `docs/features/` (stage-specific docs)
-     - `docs/ai-assistant/` (WORKFLOWS.md, GUIDELINES.md)
+     - `docs/features/` (stage-specific docs, especially LLM_PROVIDERS.md)
+     - `docs/ai-assistant/` (WORKFLOWS.md, GUIDELINES.md, REFERENCE.md, TROUBLESHOOTING.md)
      - Root level (README.md, AI_GUIDE.md)
      - Config files (config.local.json.example)
    - See [WORKFLOWS.md Documentation Verification](ai-assistant/WORKFLOWS.md#documentation-verification)
    - **Code + docs must be updated together** - no exceptions!
+
+   **⚠️ VIOLATION CONSEQUENCES:**
+   - Next AI session won't know about new features
+   - Users won't find documentation for error messages
+   - Technical debt accumulates
+   - **Ask yourself BEFORE every commit: "What docs need updating?"**
 
 4. **ALWAYS suggest git commit after completing tasks**
    - Ask: "Should I commit these changes to git?"
@@ -195,7 +201,7 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 
 ## Session History & Lessons Learned
 
-### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout + Unlimited Tokens
+### Session 2025-10-14 (Continued): Error Reporting + Model Pulling + Timeout + Config Optimization
 
 **What was done:**
 1. **Fixed progress bar duplication** in text polishing one-by-one mode
@@ -203,7 +209,9 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 3. **Added automatic model pulling with progress bar** for Ollama
 4. **Added flexible timeout configuration** - common, provider-specific, stage-specific
 5. **Added unlimited max_tokens feature** - set to 0 for no token limit
-6. **Updated config.json** with recommended settings for qwen3:32b
+6. **Enhanced Ollama error handling** - detailed diagnostics for all timeout/connection scenarios
+7. **Optimized config** - downgraded to qwen3:8b for RTX 4070, removed unnecessary llm_timeout
+8. **Updated documentation** - LLM_PROVIDERS.md with comprehensive error scenarios
 
 **The problem:**
 - Progress bar displayed twice during one-by-one processing
@@ -224,22 +232,26 @@ CHANGELOG.md       → User-facing changes (what changed, impact)
 **Key lessons:**
 - ✅ Progress bars should be called once per iteration, not in multiple code paths
 - ✅ Error messages should show WHAT failed, WHERE, and WHY (error type + message)
+- ✅ Detailed error messages with bullet points improve debugging experience dramatically
 - ✅ Large models (32B+) need 2-5 minutes timeout, not 30 seconds
 - ✅ Different stages have different performance needs (splitting fast, polishing slow)
 - ✅ Auto-pulling models with progress bar improves UX dramatically
 - ✅ Timeout should be configurable at multiple levels (global, provider, stage)
 - ✅ max_tokens=0 for unlimited prevents cut-off responses with large batches
+- ✅ **CRITICAL**: Update documentation IMMEDIATELY when adding error handling or user-facing features
 - ❌ DON'T hardcode timeouts - models vary from 2B to 32B+ parameters
 - ❌ DON'T assume 1024 tokens is enough for all batch sizes - scale with batch_size or use 0
+- ❌ **DON'T skip documentation updates** - violates Rule #3, breaks future sessions
 
 **Files modified:**
 - modules/stage7_text_polishing/processor.py - Progress bar fix + error reporting
 - shared/ollama_manager.py - Enhanced model pulling with progress bar
-- shared/llm_utils.py - Added `_ensure_model()`, timeout support, max_tokens=0 support
-- docs/features/LLM_PROVIDERS.md - Timeout + max_tokens documentation
+- shared/llm_utils.py - _ensure_model(), timeout support, max_tokens=0, detailed error handling
+- docs/features/LLM_PROVIDERS.md - Comprehensive timeout + error scenarios documentation
 - docs/core/CONFIGURATION.md - Updated LLM parameter docs
 - docs/ai-assistant/REFERENCE.md - Added LLM quick reference
-- config.json - Updated with timeout: 60, batch_size: 1, llm_timeout: 180
+- config.json - Optimized for qwen3:8b with timeout: 45, batch_size: 1
+- test_ollama_integration.py - Integration test script
 
 **Test results:** ✅ 280/280 tests pass (no regressions)
 **Impact:**
@@ -354,6 +366,29 @@ Then check if updates needed in specialized guides:
 
 If YES to any specialized guide, update it!
 ```
+
+**⚠️ MANDATORY PRE-COMMIT CHECKLIST FOR USER-FACING CHANGES:**
+
+Use this checklist BEFORE every commit that adds user-facing features:
+
+```markdown
+□ Added error messages? → Update LLM_PROVIDERS.md or TROUBLESHOOTING.md
+□ Added config parameters? → Update CONFIGURATION.md + REFERENCE.md
+□ Changed timeout/max_tokens behavior? → Update LLM_PROVIDERS.md
+□ Added new commands/scripts? → Update REFERENCE.md
+□ Changed error handling? → Update relevant troubleshooting docs
+□ Changed CLI output/progress bars? → No doc update needed (internal)
+□ Only refactored/fixed bugs? → Check if error messages changed
+
+**If you added code that users will SEE or CONFIGURE, you MUST update docs!**
+```
+
+**Example violations to avoid:**
+- ❌ Added detailed Ollama error messages → Forgot to document them
+- ❌ Added max_tokens=0 feature → Forgot to document in CONFIGURATION.md
+- ❌ Changed timeout priority → Forgot to update LLM_PROVIDERS.md
+- ✅ Fixed progress bar bug → No user-visible config changes, no docs needed
+- ✅ Refactored internal code → No user impact, no docs needed
 
 **Keep this file under 400 lines** - It's a navigation hub, not a knowledge base
 

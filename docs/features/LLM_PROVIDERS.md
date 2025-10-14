@@ -620,7 +620,17 @@ This forces one-by-one processing, which is more reliable for local LLM provider
 
 ### Ollama: "Request timed out" error
 
-**Problem:** You see "Ollama request timed out after 30s" errors
+**Problem:** You see "Ollama request timed out after Xs" errors
+
+**The error message will show:**
+```
+Ollama request timed out after 45s.
+  Possible causes:
+  - Model 'qwen3:8b' is too slow (try smaller model or increase timeout)
+  - Server is under heavy load
+  - Using CPU instead of GPU (check Ollama logs)
+  Solution: Increase timeout in config: llm.timeout = 60 or more
+```
 
 **Solution:**
 
@@ -628,10 +638,7 @@ This forces one-by-one processing, which is more reliable for local LLM provider
    ```json
    {
      "llm": {
-       "ollama": {
-         "model": "qwen3:32b",
-         "timeout": 120  // Increase to 2 minutes
-       }
+       "timeout": 60  // Applies to all stages
      }
    }
    ```
@@ -640,23 +647,123 @@ This forces one-by-one processing, which is more reliable for local LLM provider
    ```json
    {
      "llm": {
-       "ollama": {
-         "model": "qwen3:32b",
-         "timeout": 60  // Default timeout
-       }
+       "timeout": 45  // Default for all stages
      },
      "text_polishing": {
        "enable": true,
-       "llm_timeout": 180  // 3 minutes just for text polishing
+       "llm_timeout": 90  // Override: longer timeout just for polishing
      }
    }
    ```
 
 **Recommended timeouts by model size:**
 - **2-3B models (GPU):** 30-60 seconds
-- **7-8B models (GPU):** 60-120 seconds
+- **7-8B models (GPU):** 45-90 seconds
 - **32B+ models (GPU):** 120-300 seconds
 - **Any model (CPU):** 2-5x longer than GPU
+
+**Check if GPU is being used:**
+```bash
+# Start Ollama and watch logs
+ollama serve
+
+# Look for: "Using NVIDIA GeForce RTX 4070" or similar
+# If you see "Using CPU", model will be very slow
+```
+
+### Ollama: "Cannot connect to server" error
+
+**Problem:** You see connection errors
+
+**The error message will show:**
+```
+Cannot connect to Ollama server at http://localhost:11434.
+  Possible causes:
+  - Ollama server not running (start with: ollama serve)
+  - Wrong base_url in config (check llm.ollama.base_url)
+  - Server crashed (check Ollama logs)
+  Solution: Verify Ollama is running and accessible
+```
+
+**Solution:**
+1. **Check if Ollama is running:**
+   ```bash
+   ollama list  # Should show installed models
+   ```
+
+2. **Start Ollama if not running:**
+   ```bash
+   ollama serve
+   ```
+
+3. **Check base_url in config** (if using external server):
+   ```json
+   {
+     "llm": {
+       "ollama": {
+         "base_url": "http://localhost:11434"  // Verify this is correct
+       }
+     }
+   }
+   ```
+
+### Ollama: "Server connection interrupted" error
+
+**Problem:** Connection drops mid-response
+
+**The error message will show:**
+```
+Ollama server connection interrupted mid-response.
+  Possible causes:
+  - Server crashed during generation
+  - Network issues
+  - Out of memory (model too large for available VRAM/RAM)
+  Solution: Check Ollama server logs for errors
+```
+
+**Solution:**
+1. **Check Ollama logs** (in the terminal where `ollama serve` is running)
+2. **Model too large for VRAM/RAM:**
+   - RTX 4070 (12GB): Use qwen3:8b or smaller
+   - If out of memory, use smaller model: llama3.2:3b (2GB)
+3. **Check system resources:**
+   ```bash
+   # Windows: Task Manager > Performance
+   # Linux: nvidia-smi
+   ```
+
+### Ollama: "Model not found" error
+
+**Problem:** Model not available on server
+
+**The error message will show:**
+```
+Model 'qwen3:8b' not found on Ollama server. Please pull it: ollama pull qwen3:8b
+```
+
+**Solution:**
+The pipeline will automatically attempt to pull the model. If auto-pull fails:
+```bash
+ollama pull qwen3:8b
+```
+
+### Ollama: "Invalid JSON response" error
+
+**Problem:** Server returned error instead of JSON
+
+**The error message will show:**
+```
+Invalid JSON response from Ollama server.
+  Server may have returned an error message instead of JSON.
+  Solution: Check Ollama server logs for details
+```
+
+**Solution:**
+1. **Check Ollama server logs** for actual error
+2. **Common causes:**
+   - Model crashed during generation
+   - VRAM/RAM exhausted
+   - Server encountered internal error
 
 ### Performance: Slow generation
 
