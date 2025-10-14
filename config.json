@@ -34,7 +34,7 @@
   },
   "text_polishing": {
     "enable": true,
-    "batch_size": 1
+    "batch_size": 10
   },
   "hallucination_filter": {
     "phrase_filter": {

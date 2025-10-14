@@ -1,4 +1,226 @@
-## [2025-10-14 Current]
+## [2025-10-14 Current] - Continued Session
+
+### Added
+
+- **Improved error reporting in text polishing batch failures**
+  - Shows error type and message for batch-level failures
+  - Shows segment number and actual failing text for individual segment failures
+  - Shows batch summary with success/failure counts
+  - File: `modules/stage7_text_polishing/processor.py`
+
+**Why this matters:**
+When text polishing fails, users can now see EXACTLY what went wrong - which segment failed, what error occurred, and what text caused the problem. This dramatically improves debugging experience.
+
+**Example output:**
+```
+Batch 1 failed (RuntimeError: Ollama request timed out...)
+Retrying 10 segments individually...
+WARNING: Segment 3/10 failed: JSONDecodeError: Invalid JSON...
+         Text: これは長いテキストです...
+Batch 1: 7/10 segments succeeded in individual retry
+```
+
+- **Automatic model pulling with progress bar for Ollama**
+  - Checks if model exists before generation
+  - Auto-pulls missing models with detailed progress bar
+  - Shows percentage and human-readable sizes (1.7GB/2.6GB)
+  - Includes verification status
+  - Files: `shared/ollama_manager.py`, `shared/llm_utils.py`
+
+**Why this matters:**
+No more manual "ollama pull" commands! If you configure a model that's not downloaded, the system automatically pulls it with a nice progress bar showing download status.
+
+**Example output:**
+```
+Model 'qwen3:8b' not found, pulling from Ollama registry...
+Downloading: |████████░░| 65.3% (1.7GB/2.6GB)
+Verifying model...
+Model qwen3:8b ready!
+```
+
+- **Flexible timeout configuration with three-level priority system**
+  - Stage-specific `llm_timeout` (highest priority)
+  - Provider-specific `ollama.timeout`
+  - Common `llm.timeout` (applies to all providers)
+  - Default 30s (lowest priority)
+  - File: `shared/llm_utils.py`
+
+**Why this matters:**
+Different model sizes need different timeouts. A 2B model might need 15s, but a 32B model needs 180s. Text polishing (complex prompts) needs more time than segment splitting (simple prompts). Now you can configure timeouts at any level.
+
+**Config example:**
+```json
+{
+  "llm": {
+    "timeout": 45,  // Global default for all stages
+    "ollama": {
+      "model": "qwen3:8b"
+    }
+  },
+  "text_polishing": {
+    "llm_timeout": 90  // Override just for text polishing (optional)
+  }
+}
+```
+
+- **Unlimited max_tokens feature (max_tokens = 0)**
+  - Set `max_tokens: 0` to remove token limits
+  - Ollama: Omits `num_predict` parameter (uses model default)
+  - Anthropic: Uses 4096 (API requires a value)
+  - OpenAI: Uses None (no limit up to context window)
+  - File: `shared/llm_utils.py`
+
+**Why this matters:**
+With large batches (batch_size=10), responses can be cut off if max_tokens is too small. Setting max_tokens=0 prevents incomplete JSON responses.
+
+**Config example:**
+```json
+{
+  "llm": {
+    "max_tokens": 0  // Unlimited (recommended for large batches)
+  }
+}
+```
+
+- **Comprehensive error handling for all Ollama timeout/connection scenarios**
+  - Timeout errors → Shows causes (model slow, CPU usage, server load), suggests increasing timeout
+  - ConnectionError → Shows causes (server not running, wrong URL, crashed), suggests checking `ollama serve`
+  - ChunkedEncodingError → Shows causes (crashed during generation, OOM, network), suggests checking logs
+  - HTTPError 404 → Specific message for model not found with auto-pull info
+  - JSONDecodeError → Suggests checking server logs for actual error
+  - File: `shared/llm_utils.py`
+
+**Why this matters:**
+Users can now diagnose Ollama problems quickly instead of getting generic "API request failed" errors.
+
+**Example error:**
+```
+RuntimeError: Ollama request timed out after 30s.
+  Possible causes:
+  - Model 'qwen3:32b' is too slow (try smaller model or increase timeout)
+  - Server is under heavy load
+  - Using CPU instead of GPU (check Ollama logs)
+  Solution: Increase timeout in config: llm.timeout = 60 or more
+```
+
+- **Documentation enforcement mechanism to prevent Rule #3 violations**
+  - Enhanced Rule #3 with "⚠️ CRITICAL - MOST VIOLATED RULE" warning
+  - Added mandatory pre-commit checklist for user-facing changes
+  - Added example violations to avoid
+  - Added violation consequences section
+  - File: `docs/AI_GUIDE.md`
+
+**Why this matters:**
+Prevents future AI sessions from forgetting to update documentation when adding user-facing features. The checklist explicitly lists what docs to update for different types of changes.
+
+**Pre-commit checklist:**
+```
+□ Added error messages? → Update LLM_PROVIDERS.md or TROUBLESHOOTING.md
+□ Added config parameters? → Update CONFIGURATION.md + REFERENCE.md
+□ Changed timeout/max_tokens behavior? → Update LLM_PROVIDERS.md
+□ Changed error handling? → Update relevant troubleshooting docs
+```
+
+### Fixed
+
+- **Progress bar duplication in text polishing one-by-one mode**
+  - Old: `_print_progress()` called in both success path (line 103) and failure path (line 157)
+  - New: `_print_progress()` called once after both paths complete (line 166)
+  - File: `modules/stage7_text_polishing/processor.py`
+
+**Impact:** Clean, non-duplicating progress display.
+
+### Changed
+
+- **Optimized config for RTX 4070 12GB VRAM**
+  - Downgraded from qwen3:32b → qwen3:8b (32B too large for 12GB)
+  - Adjusted timeout from 60s → 45s (8B model is faster)
+  - Set batch_size: 1 (more reliable for Ollama)
+  - File: `config.json`
+
+**Why this matters:**
+qwen3:32b (~32GB) doesn't fit in 12GB VRAM, causing memory swapping and very slow performance. qwen3:8b (~8GB) runs fast and smooth on RTX 4070.
+
+### Documentation Updates
+
+- **docs/features/LLM_PROVIDERS.md**: Added comprehensive troubleshooting sections (~150 lines)
+  - "Request timed out" error - with causes, solutions, timeout recommendations by model size
+  - "Cannot connect to server" error - with diagnostics for server not running, wrong URL, crashed server
+  - "Server connection interrupted" error - for mid-response crashes, OOM, network issues
+  - "Model not found" error - documenting auto-pull behavior
+  - "Invalid JSON response" error - for server error messages instead of JSON
+  - Each section includes: exact error messages users will see, possible causes (bullet list), actionable solutions
+
+- **docs/AI_GUIDE.md**: Strengthened Rule #3 enforcement mechanisms
+  - Enhanced Rule #3 with "⚠️ CRITICAL - MOST VIOLATED RULE" warning
+  - Added violation consequences section
+  - Added mandatory pre-commit checklist for user-facing changes
+  - Added example violations to avoid (with ✅ and ❌ markers)
+  - Updated session history with all error reporting + model pulling + timeout work
+  - Added lesson: "Update documentation IMMEDIATELY when adding error handling"
+  - Added lesson: "DON'T skip documentation updates - breaks future sessions"
+
+- **docs/core/CONFIGURATION.md**: Updated LLM parameter documentation
+  - Updated `max_tokens` description: "Set to 0 for unlimited (recommended for large batches)"
+  - Updated `timeout` description with three-level priority system explanation
+  - Added notes about timeout priority and model size recommendations
+  - Added `llm_timeout` parameter to text_polishing section
+
+- **docs/ai-assistant/REFERENCE.md**: Added LLM Settings quick reference
+  - Updated test count from 275 to 285
+  - Added LLM Settings section with example config
+  - Documented max_tokens: 0 for unlimited
+  - Documented timeout priority system (stage > provider > common > default)
+  - Added timeout guidelines by model size (2-3B: 15-30s, 7-8B: 30-60s, 32B+: 120-300s)
+
+### Test Results
+✅ 280/280 tests pass (no regressions)
+
+### Impact Summary
+
+**Error diagnosis:** Users can now see exactly what failed (timeout vs connection vs JSON parsing), why it might have failed, and how to fix it - with bullet-pointed causes and actionable solutions.
+
+**Auto model pulling:** No more manual "ollama pull" commands! Models are automatically downloaded with progress bars showing percentage and size.
+
+**Large models work reliably:** Proper timeout configuration means 32B models don't time out anymore. Three-level priority system allows fine-grained control.
+
+**RTX 4070 optimized:** qwen3:8b runs fast and smooth on 12GB VRAM (qwen3:32b was too large and slow).
+
+**Future AI sessions protected:** Mandatory pre-commit checklist prevents documentation violations. Clear enforcement mechanisms ensure Rule #3 compliance.
+
+**Unlimited tokens:** max_tokens=0 prevents incomplete responses with large batches. No more cut-off JSON arrays.
+
+### Files Modified
+
+**Core implementation:**
+- `modules/stage7_text_polishing/processor.py` - Progress bar fix, enhanced error reporting
+- `shared/ollama_manager.py` - Enhanced model pulling with progress bar (lines 243-377)
+- `shared/llm_utils.py` - _ensure_model(), timeout support, max_tokens=0, detailed error handling
+
+**Configuration:**
+- `config.json` - Optimized for qwen3:8b (model, timeout: 45, batch_size: 1)
+
+**Documentation:**
+- `docs/features/LLM_PROVIDERS.md` - Comprehensive Ollama error scenarios (~150 lines added)
+- `docs/AI_GUIDE.md` - Enhanced Rule #3, mandatory checklist, session history
+- `docs/core/CONFIGURATION.md` - Updated LLM parameter docs
+- `docs/ai-assistant/REFERENCE.md` - Added LLM quick reference, updated test count
+
+**Testing:**
+- `test_ollama_integration.py` - Integration test script (new)
+
+### Git Commits (this session)
+- b0b5d05: Improve error reporting in text polishing batch failures
+- b111617: Add max_tokens=0 unlimited feature
+- e49938e: Enhanced Ollama error handling
+- 013480e: Updated CONFIGURATION.md and REFERENCE.md
+- 3a1b058: Optimized config for qwen3:8b
+- 1df4bfa: Removed unnecessary llm_timeout
+- cce8255: Document Ollama error handling and strengthen AI_GUIDE.md Rule #3
+
+---
+
+## [2025-10-14 Earlier] - Initial Session
 
 ### Added
 

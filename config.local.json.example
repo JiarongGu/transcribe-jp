@@ -11,9 +11,13 @@
     // Choose provider: "ollama" (free, local, auto-managed), "anthropic" (paid, high quality), or "openai" (paid)
     "provider": "anthropic",
 
+    // "max_tokens": 0,       // Optional: 0 = unlimited (recommended for large batches)
+    // "timeout": 60,         // Optional: Global timeout in seconds (default: 30s)
+
     "ollama": {
       "model": "llama3.2:3b"
       // "base_url": "http://localhost:11434"  // Optional: Use external Ollama server
+      // "timeout": 45         // Optional: Override timeout for Ollama (useful for large models)
     },
 
     "anthropic": {
@@ -38,8 +42,10 @@
   },
 
   "text_polishing": {
-    "enable": true
+    "enable": true,
+    "batch_size": 10    // Set to 1 to process one-by-one (recommended for Ollama)
     // "llm_provider": "anthropic"  // Uncomment to override global provider for this stage
+    // "llm_timeout": 120   // Optional: Override timeout just for this stage (useful for large models)
   },
 
   "timing_realignment": {
