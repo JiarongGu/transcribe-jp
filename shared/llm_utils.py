@@ -434,38 +434,8 @@ def parse_json_response(response_text: str, prompt: str = "", context: Optional[
     result = ResponseFixer.fix_response(response_text, expected_key)
 
     if result is not None:
-        # Check if we had to apply a fix (wasn't valid JSON originally)
-        try:
-            text = response_text.strip()
-            # Try direct parse to see if it was already valid
-            if text.startswith("```"):
-                # Remove markdown for comparison
-                lines = text.split('\n')
-                json_lines = []
-                in_code_block = False
-                for line in lines:
-                    if line.startswith("```"):
-                        in_code_block = not in_code_block
-                        continue
-                    if in_code_block:
-                        json_lines.append(line)
-                text = '\n'.join(json_lines).strip()
-
-            original_parse = json.loads(text)
-            # If original parse succeeded but result is different, we applied a fix
-            if original_parse != result:
-                logger.info(f"Applied response fix", context={
-                    "original": response_text[:100],
-                    "fixed": str(result)[:100]
-                })
-        except json.JSONDecodeError:
-            # Original was invalid, log that we fixed it
-            logger.info(f"Fixed malformed response", context={
-                "original": response_text[:100],
-                "fixed": str(result)[:100],
-                "stage": context.get("stage") if context else None
-            })
-
+        # Successfully parsed or fixed - return without logging
+        # (Logging would create noise for expected behavior)
         return result
 
     # All fixing strategies failed - log detailed error

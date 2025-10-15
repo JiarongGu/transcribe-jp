@@ -24,7 +24,6 @@ class ResponseFixer:
             Parsed JSON dict if successful, None if all fixing attempts fail
         """
         if not response_text or not response_text.strip():
-            logger.warning("Empty response text provided to ResponseFixer")
             return None
 
         original_text = response_text
@@ -46,16 +45,12 @@ class ResponseFixer:
             try:
                 result = strategy(text, expected_key)
                 if result is not None:
-                    strategy_name = strategy.__name__.replace('_', ' ').title()
-                    logger.debug(f"Successfully fixed response using {strategy_name}")
                     return result
-            except Exception as e:
-                # Continue to next strategy
-                logger.debug(f"Strategy {strategy.__name__} failed: {e}")
+            except Exception:
+                # Continue to next strategy silently
                 continue
 
-        # All strategies failed
-        logger.warning(f"All fixing strategies failed for response: {original_text[:100]}...")
+        # All strategies failed - no logging needed, caller will handle
         return None
 
     @staticmethod
