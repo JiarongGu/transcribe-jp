@@ -27,22 +27,24 @@ class AppLogger:
         """
         self.log_dir = log_dir
         self.name = name
-        self._ensure_log_dir()
+        self._handlers_setup = False
 
         # Create logger
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)  # Capture all levels
-
-        # Prevent duplicate handlers
-        if not self.logger.handlers:
-            self._setup_handlers()
 
     def _ensure_log_dir(self):
         """Create log directory if it doesn't exist"""
         Path(self.log_dir).mkdir(parents=True, exist_ok=True)
 
     def _setup_handlers(self):
-        """Setup file and console handlers with formatters"""
+        """Setup file and console handlers with formatters (lazy initialization)"""
+        if self._handlers_setup:
+            return
+
+        # Ensure log directory exists before creating handlers
+        self._ensure_log_dir()
+
         # File handler - logs everything to file
         log_file = os.path.join(
             self.log_dir,
@@ -66,32 +68,39 @@ class AppLogger:
         console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
 
+        self._handlers_setup = True
+
     def debug(self, message: str, context: Optional[Dict[str, Any]] = None):
         """Log debug message"""
+        self._setup_handlers()
         if context:
             message = f"{message} | Context: {context}"
         self.logger.debug(message)
 
     def info(self, message: str, context: Optional[Dict[str, Any]] = None):
         """Log info message"""
+        self._setup_handlers()
         if context:
             message = f"{message} | Context: {context}"
         self.logger.info(message)
 
     def warning(self, message: str, context: Optional[Dict[str, Any]] = None):
         """Log warning message"""
+        self._setup_handlers()
         if context:
             message = f"{message} | Context: {context}"
         self.logger.warning(message)
 
     def error(self, message: str, context: Optional[Dict[str, Any]] = None):
         """Log error message"""
+        self._setup_handlers()
         if context:
             message = f"{message} | Context: {context}"
         self.logger.error(message)
 
     def critical(self, message: str, context: Optional[Dict[str, Any]] = None):
         """Log critical message"""
+        self._setup_handlers()
         if context:
             message = f"{message} | Context: {context}"
         self.logger.critical(message)
@@ -115,6 +124,9 @@ class AppLogger:
         Returns:
             Path to the created error detail file
         """
+        # Ensure handlers are set up and log directory exists
+        self._setup_handlers()
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         timestamp_readable = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -200,6 +212,9 @@ class AppLogger:
         Returns:
             Path to the created error detail file
         """
+        # Ensure handlers are set up and log directory exists
+        self._setup_handlers()
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         timestamp_readable = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
