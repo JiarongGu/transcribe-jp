@@ -8,6 +8,12 @@ from shared.logger import get_logger
 logger = get_logger()
 
 
+def contains_japanese(text: str) -> bool:
+    """Check if text contains Japanese characters (hiragana, katakana, or kanji)"""
+    japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]')
+    return bool(japanese_pattern.search(text))
+
+
 class ResponseFixer:
     """Fix common malformed JSON response patterns from LLMs"""
 
@@ -236,18 +242,21 @@ class ResponseFixer:
         # If still no luck, try to extract quoted strings
         quoted_pattern = r'["\']([^"\']+)["\']'
         quoted_matches = re.findall(quoted_pattern, text)
+        # Filter out the expected_key itself (it's the JSON key, not a value)
+        quoted_matches = [m for m in quoted_matches if m != expected_key]
         if quoted_matches:
             return {expected_key: quoted_matches}
 
         # Absolute last resort: treat entire text as single item
-        # Only if it's reasonably short (likely actual content, not error message)
-        if len(text) < 200 and not text.startswith('{') and not text.startswith('['):
+        # Only if it contains Japanese (likely actual content, not English error message)
+        if len(text) < 200 and contains_japanese(text):
             # Remove common prefixes
             text = re.sub(r'^\d+[\.\)]\s*', '', text)
             text = re.sub(r'^【JSON】\s*', '', text)
             if text.strip():
                 return {expected_key: [text.strip()]}
 
+        # No valid response found
         return None
 
 

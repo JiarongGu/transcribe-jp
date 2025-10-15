@@ -110,6 +110,9 @@ JSONのみ出力してください。説明や理由は不要です。"""
                     polished_texts = result
                 elif isinstance(result, dict):
                     polished_texts = result.get("polished", texts)
+                    # Validate type - if not a list, use original texts
+                    if not isinstance(polished_texts, list):
+                        polished_texts = texts
                 else:
                     polished_texts = texts
 
@@ -183,7 +186,12 @@ JSONのみ出力してください。説明や理由は不要です。"""
                             if isinstance(result, list):
                                 polished_text = result[0] if result else text
                             elif isinstance(result, dict):
-                                polished_text = result.get("polished", [text])[0]
+                                polished_list = result.get("polished", [text])
+                                # Validate type - if not a list, use original text
+                                if isinstance(polished_list, list):
+                                    polished_text = polished_list[0] if polished_list else text
+                                else:
+                                    polished_text = text
                             else:
                                 polished_text = text
 

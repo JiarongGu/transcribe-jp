@@ -1,3 +1,25 @@
+## [2025-10-16 TBD] - Fixed Stage 7 "polished" Bug
+
+### Fixed
+
+- **Fixed VTT subtitles showing "polished" instead of Japanese text**
+  - Fixed response_fixer to exclude JSON key "polished" from extracted values
+  - Added minimal type validation to ensure LLM responses are lists
+  - Added Japanese-only fallback: plain text accepted only if it contains Japanese
+  - Files: `shared/response_fixer.py`, `modules/stage7_text_polishing/processor.py`
+
+**The problem:**
+User reported VTT entry #30 showing the word "polished" instead of Japanese subtitle text. Root cause: `response_fixer._extract_any_array()` extracted ALL quoted strings including the JSON key `"polished"` itself, resulting in `["polished", "actual_text"]` instead of `["actual_text"]`.
+
+**The fix:**
+1. Filter out `expected_key` from quoted string matches in response_fixer
+2. Add type check: ensure `polished_texts` is a list before using
+3. Japanese-aware fallback: accept plain text only if it contains Japanese characters (prevents English error messages from being treated as valid responses)
+
+**Test results:** 300/300 tests pass ✅
+
+---
+
 ## [2025-10-15 TBD] - Refactored Stage 4 + Added Ollama Context Length Control
 
 ### Added
