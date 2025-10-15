@@ -124,13 +124,27 @@ JSON形式で、分割後のテキストを配列で返してください。
             print(f"  - Warning: Empty LLM response, using original text")
             return [(start_time, end_time, text)]
 
-        # Parse JSON response - handle markdown code blocks
+        # Parse JSON response - handle markdown code blocks with error logging
         try:
-            result = parse_json_response(response_text)
+            context = {
+                "stage": "segment_splitting",
+                "start_time": start_time,
+                "end_time": end_time,
+                "text_length": text_length,
+                "duration": duration,
+                "segment_text": text[:100]  # First 100 chars for reference
+            }
+            result = parse_json_response(response_text, prompt=prompt, context=context)
             segments = result.get("segments", [text])
         except json.JSONDecodeError as e:
-            print(f"  - Warning: Failed to parse LLM response as JSON at {start_time:.1f}s")
-            print(f"  - Response preview: {response_text[:200]}...")
+            error_msg = str(e)
+            # Check if error message contains log path
+            if "detailed log:" in error_msg:
+                print(f"  - Warning: Failed to parse LLM response as JSON at {start_time:.1f}s")
+                print(f"  - {error_msg}")
+            else:
+                print(f"  - Warning: Failed to parse LLM response as JSON at {start_time:.1f}s")
+                print(f"  - Response preview: {response_text[:200]}...")
             print(f"  - Keeping original segment unsplit")
             return [(start_time, end_time, text, word_timestamps if word_timestamps else [])]
 

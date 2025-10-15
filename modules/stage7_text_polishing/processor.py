@@ -95,8 +95,15 @@ JSONのみ出力してください。説明や理由は不要です。"""
                 temperature = llm_config.get("temperature", 0.0)
                 response_text = llm_provider.generate(prompt, max_tokens=max_tokens, temperature=temperature)
 
-                # Parse JSON response
-                result = parse_json_response(response_text)
+                # Parse JSON response with context for error logging
+                context = {
+                    "stage": "text_polishing",
+                    "batch_num": batch_num,
+                    "batch_size": len(batch),
+                    "total_segments": total_segments,
+                    "processing_mode": "batch"
+                }
+                result = parse_json_response(response_text, prompt=prompt, context=context)
 
                 # Handle both dict {"polished": [...]} and direct list [...]
                 if isinstance(result, list):
@@ -160,8 +167,17 @@ JSONのみ出力してください。説明や理由は不要です。"""
                             temperature = llm_config.get("temperature", 0.0)
                             response_text = llm_provider.generate(prompt, max_tokens=max_tokens, temperature=temperature)
 
-                            # Parse JSON response
-                            result = parse_json_response(response_text)
+                            # Parse JSON response with context for error logging
+                            context = {
+                                "stage": "text_polishing",
+                                "batch_num": batch_num,
+                                "segment_num": j + 1,
+                                "total_in_batch": len(batch),
+                                "processing_mode": "individual_retry",
+                                "original_error": batch_error_msg,
+                                "segment_text": text[:100]  # First 100 chars for reference
+                            }
+                            result = parse_json_response(response_text, prompt=prompt, context=context)
 
                             # Handle both dict {"polished": [...]} and direct list [...]
                             if isinstance(result, list):

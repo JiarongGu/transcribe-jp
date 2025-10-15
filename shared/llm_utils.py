@@ -409,18 +409,20 @@ def create_llm_provider(config: Dict[str, Any], stage_name: Optional[str] = None
         return None
 
 
-def parse_json_response(response_text: str) -> Dict[str, Any]:
+def parse_json_response(response_text: str, prompt: str = "", context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Parse JSON response from LLM, handling markdown code blocks.
 
     Args:
         response_text: Raw LLM response text
+        prompt: Original prompt sent to LLM (for error logging)
+        context: Additional context for error logging (stage, batch_num, etc.)
 
     Returns:
         Parsed JSON as dictionary
 
     Raises:
-        json.JSONDecodeError: If response cannot be parsed as JSON
+        json.JSONDecodeError: If response cannot be parsed as JSON (with detailed logging)
     """
     text = response_text.strip()
 
@@ -437,4 +439,21 @@ def parse_json_response(response_text: str) -> Dict[str, Any]:
                 json_lines.append(line)
         text = '\n'.join(json_lines).strip()
 
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        # Log detailed error for debugging
+        from shared.logger import get_logger
+        logger = get_logger()
+        log_path = logger.log_json_decode_error(
+            error=e,
+            raw_response=response_text,
+            prompt=prompt,
+            context=context
+        )
+        # Re-raise with log file reference
+        raise json.JSONDecodeError(
+            f"{e.msg} (detailed log: {log_path})",
+            e.doc,
+            e.pos
+        ) from e
