@@ -409,51 +409,77 @@ def create_llm_provider(config: Dict[str, Any], stage_name: Optional[str] = None
         return None
 
 
-def parse_json_response(response_text: str, prompt: str = "", context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def parse_json_response(response_text: str, prompt: str = "", context: Optional[Dict[str, Any]] = None, expected_key: str = "polished") -> Dict[str, Any]:
     """
-    Parse JSON response from LLM, handling markdown code blocks.
+    Parse JSON response from LLM, with automatic fixing for common malformations.
 
     Args:
         response_text: Raw LLM response text
         prompt: Original prompt sent to LLM (for error logging)
         context: Additional context for error logging (stage, batch_num, etc.)
+        expected_key: Expected key in the JSON response (default: "polished")
 
     Returns:
         Parsed JSON as dictionary
 
     Raises:
-        json.JSONDecodeError: If response cannot be parsed as JSON (with detailed logging)
+        json.JSONDecodeError: If response cannot be parsed or fixed (with detailed logging)
     """
-    text = response_text.strip()
+    from shared.response_fixer import ResponseFixer
+    from shared.logger import get_logger
 
-    # Remove markdown code blocks if present
-    if text.startswith("```"):
-        lines = text.split('\n')
-        json_lines = []
-        in_code_block = False
-        for line in lines:
-            if line.startswith("```"):
-                in_code_block = not in_code_block
-                continue
-            if in_code_block or (not line.startswith("```") and json_lines):
-                json_lines.append(line)
-        text = '\n'.join(json_lines).strip()
+    logger = get_logger()
 
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError as e:
-        # Log detailed error for debugging
-        from shared.logger import get_logger
-        logger = get_logger()
-        log_path = logger.log_json_decode_error(
-            error=e,
-            raw_response=response_text,
-            prompt=prompt,
-            context=context
-        )
-        # Re-raise with log file reference
-        raise json.JSONDecodeError(
-            f"{e.msg} (detailed log: {log_path})",
-            e.doc,
-            e.pos
-        ) from e
+    # Try to fix and parse the response
+    result = ResponseFixer.fix_response(response_text, expected_key)
+
+    if result is not None:
+        # Check if we had to apply a fix (wasn't valid JSON originally)
+        try:
+            text = response_text.strip()
+            # Try direct parse to see if it was already valid
+            if text.startswith("```"):
+                # Remove markdown for comparison
+                lines = text.split('\n')
+                json_lines = []
+                in_code_block = False
+                for line in lines:
+                    if line.startswith("```"):
+                        in_code_block = not in_code_block
+                        continue
+                    if in_code_block:
+                        json_lines.append(line)
+                text = '\n'.join(json_lines).strip()
+
+            original_parse = json.loads(text)
+            # If original parse succeeded but result is different, we applied a fix
+            if original_parse != result:
+                logger.info(f"Applied response fix", context={
+                    "original": response_text[:100],
+                    "fixed": str(result)[:100]
+                })
+        except json.JSONDecodeError:
+            # Original was invalid, log that we fixed it
+            logger.info(f"Fixed malformed response", context={
+                "original": response_text[:100],
+                "fixed": str(result)[:100],
+                "stage": context.get("stage") if context else None
+            })
+
+        return result
+
+    # All fixing strategies failed - log detailed error
+    e = json.JSONDecodeError("Failed to parse or fix response (tried all strategies)", response_text, 0)
+    log_path = logger.log_json_decode_error(
+        error=e,
+        raw_response=response_text,
+        prompt=prompt,
+        context=context
+    )
+
+    # Re-raise with log file reference
+    raise json.JSONDecodeError(
+        f"Failed to parse or fix response (detailed log: {log_path})",
+        response_text,
+        0
+    ) from e
