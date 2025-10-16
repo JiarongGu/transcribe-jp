@@ -122,7 +122,7 @@ def remove_hallucination_phrases(segments, config, model=None, media_path=None):
             # Re-validate with Whisper if enabled
             if enable_revalidate and model and media_path:
                 from modules.stage5_hallucination_filtering.timing_validator import revalidate_segment_with_whisper
-                from shared.text_utils import calculate_similarity
+                from modules.stage6_timing_realignment.utils import calculate_text_similarity
 
                 revalidated_count += 1
                 new_text, new_words = revalidate_segment_with_whisper(
@@ -135,7 +135,7 @@ def remove_hallucination_phrases(segments, config, model=None, media_path=None):
                     continue
                 else:
                     # Check if re-validated text is similar to original
-                    similarity = calculate_similarity(normalize_text(text), normalize_text(new_text))
+                    similarity = calculate_text_similarity(normalize_text(text), normalize_text(new_text))
 
                     if similarity >= 0.75:  # Similar text = false positive
                         # Keep segment with original text (pattern was false positive)
