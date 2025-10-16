@@ -283,10 +283,14 @@ Removes segments matching known hallucination phrases or patterns. Supports rege
 **Whisper Revalidation (Optional):**
 When `enable_revalidate: true`, matched segments are re-transcribed with Whisper to verify they're hallucinations:
 - No speech detected → confirmed hallucination (removed)
-- Similar text (≥75% similarity) → false positive (kept with original text)
-- Different text (<75% similarity) → confirmed hallucination (removed)
+- Similar text (≥75% similarity) → **confirmed hallucination** (removed - Whisper hallucinates it consistently)
+- Different text (<75% similarity) → false positive (kept with new transcription text)
 
-This prevents false positives from overly broad patterns. For example, if pattern `ご視聴.*ありがとう` matches valid speech that happens to say "ご視聴", revalidation will keep it.
+This detects phrases that Whisper consistently hallucinates and prevents false positives from overly broad patterns.
+
+**Example:** Pattern `ご視聴.*ありがとう` matches "ご視聴ありがとうございました":
+- If re-transcription produces **same text** → Whisper hallucination (remove it)
+- If re-transcription produces **different text** → Real speech that matched pattern (keep new text)
 
 **Notes:**
 - Regex patterns are matched against normalized text (no whitespace/punctuation)
