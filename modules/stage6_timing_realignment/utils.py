@@ -3,38 +3,8 @@ Shared utility functions for timing realignment methods.
 """
 
 import re
-import difflib
 from shared.whisper_utils import transcribe_with_config
-
-
-def calculate_text_similarity(text1, text2):
-    """
-    Calculate similarity between two texts using sequence matching (0.0 to 1.0).
-
-    Uses difflib.SequenceMatcher which implements Ratcliff/Obershelp algorithm:
-    - Handles insertions, deletions, and reorderings
-    - More robust than simple character position matching
-    - Works well for Japanese text with transcription variations
-
-    Args:
-        text1: First text to compare
-        text2: Second text to compare
-
-    Returns:
-        Similarity ratio from 0.0 (completely different) to 1.0 (identical)
-    """
-    # Remove common punctuation and spaces for comparison
-    clean1 = re.sub(r'[、。！？\s]', '', text1)
-    clean2 = re.sub(r'[、。！？\s]', '', text2)
-
-    if not clean1 or not clean2:
-        return 0.0
-
-    # Use difflib's SequenceMatcher for robust similarity calculation
-    # This handles character insertions, deletions, and reorderings much better
-    # than simple position-based matching
-    matcher = difflib.SequenceMatcher(None, clean1, clean2, autojunk=False)
-    return matcher.ratio()
+from shared.text_utils import calculate_text_similarity
 
 
 def find_text_in_words(target_text, words_with_timestamps, offset=0.0):

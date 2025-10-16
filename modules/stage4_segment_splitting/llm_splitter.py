@@ -3,35 +3,12 @@
 import json
 import re
 from shared.llm_utils import create_llm_provider, parse_json_response
+from shared.text_utils import calculate_text_similarity
 
 
 def clean_for_matching(text):
     """Remove all punctuation and whitespace, keep only content characters"""
     return re.sub(r'[、。？！\s…「」『』【】（）()[\]]+', '', text)
-
-
-def calculate_text_similarity(text1, text2):
-    """Calculate similarity between two texts (0.0 to 1.0)"""
-    clean1 = clean_for_matching(text1)
-    clean2 = clean_for_matching(text2)
-
-    if not clean1 and not clean2:
-        return 1.0
-    if not clean1 or not clean2:
-        return 0.0
-
-    # Use longest common subsequence ratio
-    longer = max(len(clean1), len(clean2))
-    shorter = min(len(clean1), len(clean2))
-
-    # Simple character matching
-    matches = sum(1 for c1, c2 in zip(clean1, clean2) if c1 == c2)
-
-    # Penalize length differences
-    length_similarity = shorter / longer if longer > 0 else 0
-    char_similarity = matches / longer if longer > 0 else 0
-
-    return (length_similarity * 0.3) + (char_similarity * 0.7)
 
 
 def validate_llm_segments(original_text, llm_segments):
