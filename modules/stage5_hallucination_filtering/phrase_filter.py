@@ -144,10 +144,23 @@ def remove_hallucination_phrases(segments, config, model=None, media_path=None):
                         removed_count += 1
                         continue
                     else:
-                        # Whisper produced different text = false positive
-                        # Pattern matched legitimate speech, keep the new transcription
-                        false_positive_count += 1
-                        filtered.append((start_time, end_time, new_text, new_words))
+                        # Whisper produced different text - check if new text still matches patterns
+                        new_normalized = normalize_text(new_text)
+                        new_matches_pattern = False
+                        for pattern in compiled_patterns:
+                            if pattern.search(new_normalized):
+                                new_matches_pattern = True
+                                break
+
+                        if new_matches_pattern:
+                            # New text still matches patterns = still a hallucination
+                            removed_count += 1
+                            continue
+                        else:
+                            # New text doesn't match patterns = false positive
+                            # Pattern matched legitimate speech, keep the new transcription
+                            false_positive_count += 1
+                            filtered.append((start_time, end_time, new_text, new_words))
             else:
                 # No revalidation - remove based on pattern match alone
                 removed_count += 1
