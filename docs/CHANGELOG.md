@@ -1,3 +1,78 @@
+## [2025-10-17 17:00] - Fixed Phrase Filter Revalidation Logic for Consistent Hallucinations
+
+### Fixed
+
+- **Fixed phrase_filter revalidation logic to detect consistent Whisper hallucinations**
+  - Inverted similarity logic: same text = hallucination, different text = false positive
+  - Now correctly removes phrases that Whisper consistently hallucinates
+  - Files: `modules/stage5_hallucination_filtering/phrase_filter.py`
+
+**The problem:**
+User reported "ご視聴ありがとうございました" (video outro hallucination) was NOT being removed
+even though the pattern matched and `enable_revalidate: true` was set.
+
+Root cause: The revalidation logic was backwards!
+- Pattern matched "ご視聴ありがとうございました" → triggered revalidation
+- Re-transcribed same segment → Whisper hallucinated it again (consistent hallucination)
+- Old logic: "Same text = false positive, keep it" ❌ WRONG!
+- Result: Hallucination was kept in final output
+
+**Why Whisper hallucinates consistently:**
+Whisper can deterministically produce the same hallucination on the same audio segment,
+especially for common phrases like "ご視聴ありがとうございました", silence, or ambiguous audio.
+
+**The fix:**
+Inverted the revalidation logic for phrase_filter:
+```python
+# OLD (WRONG):
+if similarity >= 0.75:
+    # Same text = false positive, KEEP IT
+    keep_segment()
+else:
+    # Different text = hallucination, REMOVE IT
+    remove_segment()
+
+# NEW (CORRECT):
+if similarity >= 0.75:
+    # Whisper produced SAME text again = confirmed hallucination, REMOVE IT
+    remove_segment()
+else:
+    # Whisper produced DIFFERENT text = false positive, KEEP NEW TEXT
+    keep_segment_with_new_text()
+```
+
+**Why this logic is correct:**
+- **Same text (≥75%)**: Whisper consistently hallucinates the same phrase → confirmed hallucination
+- **Different text (<75%)**: Pattern matched real speech, but it's not the hallucination → keep new text
+
+**Example scenario:**
+1. Pattern `ご視聴.*ありがとう` matches segment "ご視聴ありがとうございました"
+2. Re-transcribe segment → Whisper produces "ご視聴ありがとうございました" again
+3. Similarity: 100% (same text)
+4. **Conclusion: Whisper hallucinates this consistently → REMOVE IT** ✅
+
+**Contrasting with timing_validation:**
+timing_validation uses OPPOSITE logic (and that's correct for its purpose):
+- Same text = timing is fine, keep it
+- Different text = timing issue caused wrong transcription, remove it
+
+The key difference: phrase_filter detects **pattern-based hallucinations**, while
+timing_validation detects **timing-based hallucinations**.
+
+**Impact:**
+- Phrase filter now correctly removes consistent Whisper hallucinations
+- "ご視聴ありがとうございました" and similar video outros will be removed
+- Pattern matching + revalidation now works as intended
+- False positives still handled: if pattern matches but Whisper produces different text, keeps new text
+
+**Files modified:**
+- modules/stage5_hallucination_filtering/phrase_filter.py (inverted lines 140-149)
+- Updated docstring to reflect correct behavior
+
+**Test results:** 319/319 tests pass ✅
+
+---
+
 ## [2025-10-17 16:30] - Enhanced Hallucination Phrase Filter with Regex + Revalidation
 
 ### Added

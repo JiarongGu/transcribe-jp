@@ -41,8 +41,9 @@ def remove_hallucination_phrases(segments, config, model=None, media_path=None):
 
     Optional Whisper re-validation:
     - When enabled, matched segments are re-transcribed to verify they're hallucinations
-    - If Whisper produces different text: segment is confirmed hallucination (removed)
-    - If Whisper produces similar text: false positive (kept)
+    - If Whisper produces SAME text again (≥75%): confirmed hallucination (removed)
+    - If Whisper produces DIFFERENT text (<75%): false positive (kept with new text)
+    - Detects phrases that Whisper consistently hallucinates
     - Reduces false positives from overly broad patterns
 
     Configuration:
@@ -137,14 +138,16 @@ def remove_hallucination_phrases(segments, config, model=None, media_path=None):
                     # Check if re-validated text is similar to original
                     similarity = calculate_text_similarity(normalize_text(text), normalize_text(new_text))
 
-                    if similarity >= 0.75:  # Similar text = false positive
-                        # Keep segment with original text (pattern was false positive)
-                        false_positive_count += 1
-                        filtered.append((start_time, end_time, text, words))
-                    else:
-                        # Different text = confirmed hallucination
+                    if similarity >= 0.75:
+                        # Whisper produced same text again = confirmed hallucination
+                        # (Whisper consistently hallucinates the same phrase)
                         removed_count += 1
                         continue
+                    else:
+                        # Whisper produced different text = false positive
+                        # Pattern matched legitimate speech, keep the new transcription
+                        false_positive_count += 1
+                        filtered.append((start_time, end_time, new_text, new_words))
             else:
                 # No revalidation - remove based on pattern match alone
                 removed_count += 1
