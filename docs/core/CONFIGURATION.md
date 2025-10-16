@@ -214,6 +214,10 @@ Removes Whisper transcription artifacts and repetitive hallucinations.
       "phrases": [
         "ご視聴ありがとうございました",
         "ご視聴いただきありがとうございます"
+      ],
+      "regex_patterns": [
+        "(?i)acceptable\\s*[a-z]+",
+        "[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+"
       ]
     },
     "stammer_filter": {
@@ -257,12 +261,38 @@ Removes Whisper transcription artifacts and repetitive hallucinations.
 
 #### Phrase Filter
 
-Removes exact phrase matches (e.g., common YouTube outros).
+Removes segments matching known hallucination phrases or patterns. Supports regex patterns with optional Whisper revalidation to reduce false positives.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `enable` | boolean | `true` | Enable phrase filtering |
-| `phrases` | array | See above | Exact phrases to remove |
+| `enable_revalidate` | boolean | `false` | Re-validate pattern matches with Whisper before removing (reduces false positives) |
+| `patterns` | array | See above | Regex patterns to match (applied to normalized text) |
+
+**Pattern Matching Behavior:**
+- All patterns are treated as regex (maximum flexibility)
+- Text is normalized before matching (whitespace and punctuation removed)
+- Example: `ご視聴.*ありがとう` matches "ご視聴 ありがとう ございました。"
+
+**Regex Pattern Examples:**
+- `"(?i)acceptable\\s*[a-z]+"` - Case-insensitive match for "acceptable" + any English word (catches Whisper mistranscriptions like "acceptable isk")
+- `"[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+"` - Japanese + English (3+ chars) + Japanese (mixed-language errors)
+- `"ご視聴.*ありがとう"` - Flexible match for video outros (catches all variations)
+- `"[0-9,]{10,}"` - Long number sequences (common hallucinations)
+
+**Whisper Revalidation (Optional):**
+When `enable_revalidate: true`, matched segments are re-transcribed with Whisper to verify they're hallucinations:
+- No speech detected → confirmed hallucination (removed)
+- Similar text (≥75% similarity) → false positive (kept with original text)
+- Different text (<75% similarity) → confirmed hallucination (removed)
+
+This prevents false positives from overly broad patterns. For example, if pattern `ご視聴.*ありがとう` matches valid speech that happens to say "ご視聴", revalidation will keep it.
+
+**Notes:**
+- Regex patterns are matched against normalized text (no whitespace/punctuation)
+- Use `(?i)` flag for case-insensitive matching
+- Invalid regex patterns emit warning and are skipped
+- Revalidation is disabled by default (opt-in feature)
 
 #### Stammer Filter
 
@@ -306,7 +336,7 @@ Validates and optionally re-transcribes segments with suspicious timing.
 |-----------|------|---------|-------------|
 | `enable` | boolean | `true` | Enable timing validation |
 | `max_chars_per_second` | integer | `20` | Max reading speed (chars/second) |
-| `enable_revalidate_with_whisper` | boolean | `true` | Re-transcribe suspicious segments |
+| `enable_revalidate` | boolean | `true` | Re-transcribe suspicious segments |
 
 **Notes:**
 - Catches segments where text is too long/short for audio duration

@@ -33,7 +33,7 @@ def validate_segment_timing(segments, config, model=None, media_path=None):
     """
     timing_config = config.get("hallucination_filter", {}).get("timing_validation", {})
     max_chars_per_second = timing_config.get("max_chars_per_second", 20)
-    enable_revalidate = timing_config.get("enable_revalidate_with_whisper", False)
+    enable_revalidate = timing_config.get("enable_revalidate", False)
 
     validated = []
     suspicious_count = 0

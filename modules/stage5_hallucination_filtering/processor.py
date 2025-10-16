@@ -30,11 +30,11 @@ def filter_hallucinations(segments, config, model=None, media_path=None):
 
     print("  - Applying hallucination filters...")
 
-    # Step 1: Remove known hallucination phrases (exact match)
+    # Step 1: Remove known hallucination phrases (pattern matching + optional revalidation)
     phrase_config = hallucination_config.get("phrase_filter", {})
     if phrase_config.get("enable", False):
         print("    - Removing hallucination phrases")
-        segments = remove_hallucination_phrases(segments, config)
+        segments = remove_hallucination_phrases(segments, config, model, media_path)
 
     # Step 2: Remove consecutive duplicates
     consecutive_config = hallucination_config.get("consecutive_duplicates", {})
@@ -55,12 +55,12 @@ def filter_hallucinations(segments, config, model=None, media_path=None):
 
         # If timing validation re-transcribed segments, re-run filters on the new text
         # This prevents re-validated segments from containing hallucination phrases
-        if len(segments) != segments_before_validation or timing_config.get("enable_revalidate_with_whisper", False):
+        if len(segments) != segments_before_validation or timing_config.get("enable_revalidate", False):
             print("    - Re-filtering after timing validation")
 
             # Re-run phrase filter
             if phrase_config.get("enable", False):
-                segments = remove_hallucination_phrases(segments, config)
+                segments = remove_hallucination_phrases(segments, config, model, media_path)
 
             # Re-run consecutive duplicates filter
             if consecutive_config.get("enable", False):

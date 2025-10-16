@@ -134,7 +134,9 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
 
 **Operations:**
 - **Consecutive duplicates:** Merge repeated segments (common hallucination pattern)
-- **Phrase filter:** Remove known hallucination phrases (e.g., "ご視聴ありがとうございました")
+- **Phrase filter:** Remove segments matching hallucination phrases or regex patterns
+  - Exact match: "ご視聴ありがとうございました" (normalized, whitespace/punctuation ignored)
+  - Regex patterns: Mixed-language errors like "acceptable isk" (Whisper mistranscriptions)
 - **Timing validation:** Detect suspicious segments by checking speech rate
   - Too fast (>20 chars/sec) or too slow (<1 char/sec) indicates likely hallucination
   - Optionally re-transcribes suspicious segments with Whisper to verify
@@ -161,7 +163,11 @@ The 9-stage architecture follows a clear progression from raw audio to polished 
   "hallucination_filter": {
     "phrase_filter": {
       "enable": true,
-      "phrases": ["ご視聴ありがとうございました"]
+      "phrases": ["ご視聴ありがとうございました"],
+      "regex_patterns": [
+        "(?i)acceptable\\s*[a-z]+",
+        "[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+"
+      ]
     },
     "consecutive_duplicates": {
       "enable": true,

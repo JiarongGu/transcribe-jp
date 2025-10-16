@@ -39,11 +39,14 @@
   "hallucination_filter": {
     "phrase_filter": {
       "enable": true,
-      "phrases": [
-        "…………",
-        "ご視聴ありがとうございました",
-        "ご視聴いただきありがとうございます",
-        "ご視聴いただきありがとうございました。"
+      "enable_revalidate": true,
+      "patterns": [
+        "(?i)acceptable\\s*[a-z]+",
+        "[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+",
+        "^[…。、]*$",
+        "ご視聴.*ありがとう",
+        "おやすみなさい.*ご視聴",
+        "[0-9,]{10,}"
       ]
     },
     "consecutive_duplicates": {
@@ -53,7 +56,7 @@
     "timing_validation": {
       "enable": true,
       "max_chars_per_second": 20,
-      "enable_revalidate_with_whisper": true
+      "enable_revalidate": true
     }
   },
   "timing_realignment": {

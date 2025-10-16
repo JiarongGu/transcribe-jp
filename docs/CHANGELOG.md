@@ -1,3 +1,144 @@
+## [2025-10-17 16:30] - Enhanced Hallucination Phrase Filter with Regex + Revalidation
+
+### Added
+
+- **Regex pattern support in hallucination phrase filter**
+  - New unified `patterns` configuration (replaces separate `phrases` + `regex_patterns`)
+  - All patterns treated as regex for maximum flexibility
+  - Supports mixed-language error detection (e.g., "acceptable isk" Whisper mistranscriptions)
+  - Case-insensitive matching with `(?i)` flag support
+  - Pattern matching applied to normalized text (whitespace/punctuation removed)
+  - Graceful handling of invalid regex patterns with warning messages
+  - Files: `modules/stage5_hallucination_filtering/phrase_filter.py`
+
+**The problem:**
+Exact phrase matching in hallucination filter couldn't handle variations like "acceptable isk" vs "acceptable risk" or mixed-language errors where Whisper mishears Japanese as English. User reported segment: "あなたは、すでに acceptable isk を読んでいます。" which wasn't caught by exact match filter.
+
+**Why this matters:**
+Whisper sometimes hallucinates mixed-language segments by mishearing Japanese phonemes as English words. Examples:
+- "acceptable isk" (should be リスク or "risk")
+- Japanese + random English fragments
+- Small variations that exact match can't handle
+
+Exact string matching is too rigid - it can't catch these variations without adding hundreds of explicit phrases.
+
+**The solution:**
+Added `regex_patterns` array to phrase_filter config:
+```json
+{
+  "phrase_filter": {
+    "enable": true,
+    "phrases": ["exact matches..."],
+    "regex_patterns": [
+      "(?i)acceptable\\s*[a-z]+",        // Case-insensitive "acceptable" + any word
+      "[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+"  // Japanese + English (3+ chars) + Japanese
+    ]
+  }
+}
+```
+
+**Pattern examples:**
+- `(?i)acceptable\s*[a-z]+` - Catches "acceptable isk", "acceptable risk", "ACCEPTABLE ISK"
+- `[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+` - Catches mixed hiragana-English-hiragana patterns
+- `ご視聴.*ありがとう` - Catches all video outro variations
+- `おやすみなさい.*ご視聴` - Catches compound "goodnight + viewing" patterns
+- `^[…。、]*$` - Catches ellipsis/punctuation-only segments
+- `[0-9,]{10,}` - Catches long number sequences (common hallucinations)
+
+**Behavior:**
+- Patterns matched against normalized text (after removing whitespace/punctuation)
+- Invalid patterns emit warning and are skipped (doesn't break pipeline)
+- Works alongside exact phrase matching (both can be used together)
+- Original exact match behavior unchanged (backward compatible)
+
+**Impact:**
+- Can now catch Whisper mistranscription patterns with flexible regex
+- Reduces false negatives for mixed-language hallucinations
+- Catches compound hallucinations like "1,2,3,4,5,6,7,8おやすみなさいご視聴ありがとうございました"
+- Single pattern catches multiple variations (vs adding dozens of exact phrases)
+- More maintainable than exhaustive exact match list
+
+**Configuration update:**
+Moved from exact phrases to flexible regex patterns:
+```json
+"regex_patterns": [
+  "(?i)acceptable\\s*[a-z]+",           // Mixed-language errors
+  "[ぁ-ん]+.*[a-zA-Z]{3,}.*[ぁ-ん]+",   // Japanese+English+Japanese
+  "^[…。、]*$",                          // Ellipsis-only segments
+  "ご視聴.*ありがとう",                  // Video outros (all variations)
+  "おやすみなさい.*ご視聴",              // Compound goodnight+viewing
+  "[0-9,]{10,}"                         // Long number sequences
+]
+```
+
+**Files modified:**
+- `modules/stage5_hallucination_filtering/phrase_filter.py` - Added regex pattern support + Whisper revalidation
+- `modules/stage5_hallucination_filtering/processor.py` - Pass model and media_path to phrase_filter
+- `modules/stage5_hallucination_filtering/timing_validator.py` - Renamed config to enable_revalidate
+- `tests/unit/modules/stage5_hallucination_filtering/test_phrase_filter.py` - Added 19 new tests (total +19)
+- `tests/unit/modules/stage5_hallucination_filtering/test_timing_validation_refilter.py` - Updated 3 tests for new config name
+- `config.json` - Converted exact phrases to regex patterns + renamed enable_revalidate_with_whisper
+- `docs/core/CONFIGURATION.md` - Updated phrase_filter documentation with regex + revalidation
+- `docs/core/PIPELINE_STAGES.md` - Updated Stage 5 description with regex pattern info
+- `docs/AI_GUIDE.md` - Updated test count from 285 to 319
+
+**Simplified config (breaking change for better UX):**
+Replaced dual `phrases` + `regex_patterns` config with single `patterns` array:
+```json
+// Old config (still supported for backward compatibility)
+"phrase_filter": {
+  "phrases": ["ご視聴ありがとうございました"],     // Exact match
+  "regex_patterns": ["(?i)acceptable"]            // Regex
+}
+
+// New config (recommended)
+"phrase_filter": {
+  "patterns": [                                    // All patterns (regex)
+    "ご視聴.*ありがとう",
+    "(?i)acceptable\\s*[a-z]+"
+  ]
+}
+```
+
+**Backward compatibility:** Old `phrases` + `regex_patterns` config still works. Exact phrases converted to anchored regex (`^pattern$`).
+
+- **Whisper revalidation for phrase filter matches**
+  - New `enable_revalidate` option in phrase_filter config
+  - Re-transcribes matched segments to verify they're actual hallucinations
+  - Reduces false positives from overly broad patterns
+  - Same revalidation feature as timing_validation (unified naming)
+  - Files: `modules/stage5_hallucination_filtering/phrase_filter.py`, `processor.py`
+
+**Revalidation behavior:**
+- Pattern matches a segment → re-transcribe with Whisper
+- No speech detected → confirmed hallucination (remove)
+- Similar text (≥75%) → false positive (keep original)
+- Different text (<75%) → confirmed hallucination (remove)
+
+**Config changes:**
+```json
+"phrase_filter": {
+  "enable": true,
+  "enable_revalidate": false,  // NEW: Re-validate matches (optional)
+  "patterns": ["ご視聴.*ありがとう", "(?i)acceptable\\s*[a-z]+"]
+},
+"timing_validation": {
+  "enable": true,
+  "max_chars_per_second": 20,
+  "enable_revalidate": true  // RENAMED: from enable_revalidate_with_whisper
+}
+```
+
+**Impact of revalidation:**
+- Prevents false positives when patterns are too broad
+- Example: Pattern `ご視聴.*ありがとう` might match valid speech that happens to say "ご視聴"
+- Revalidation checks if Whisper produces same text → if yes, keep it (not hallucination)
+- Disabled by default (opt-in feature)
+
+**Test results:** 319/319 tests pass (37 phrase filter tests, +19 regex tests, +4 new config tests) ✅
+
+---
+
 ## [2025-10-16 TBD] - Fixed Stage 7 "polished" Bug
 
 ### Fixed

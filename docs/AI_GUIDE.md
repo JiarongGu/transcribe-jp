@@ -38,7 +38,7 @@ This AI_GUIDE.md is a **NAVIGATION HUB** - it provides a summary and points you 
 
 **⚠️ This is a SUMMARY. Read [GUIDELINES.md](ai-assistant/GUIDELINES.md) for full rules!**
 
-1. **ALWAYS run tests before committing** - All 280+ tests must pass
+1. **ALWAYS run tests before committing** - All 319+ tests must pass
    ```bash
    python -X utf8 -m pytest tests/unit/ -q --tb=line
    ```
@@ -157,7 +157,7 @@ This AI_GUIDE.md is a **NAVIGATION HUB** - it provides a summary and points you 
 ## Key Facts
 
 - **9-stage Japanese transcription pipeline** - Whisper → processing → VTT output
-- **285 tests** - 280 unit + 4 E2E + 1 smoke test (all must pass before committing)
+- **319 tests** - All unit tests must pass before committing
 - **Japanese-specific** - Particle variations, no spaces, sentence structure
 - **Stage order is critical** - Filtering before realignment, polishing after
 - **Test command:** `python -X utf8 -m pytest tests/unit/ -q --tb=line`

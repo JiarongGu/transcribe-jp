@@ -45,7 +45,7 @@ class TestTimingValidationRefiltering:
                 },
                 "timing_validation": {
                     "enable": True,
-                    "enable_revalidate_with_whisper": True
+                    "enable_revalidate": True
                 }
             }
         }
@@ -89,7 +89,7 @@ class TestTimingValidationRefiltering:
                 },
                 "timing_validation": {
                     "enable": True,
-                    "enable_revalidate_with_whisper": True
+                    "enable_revalidate": True
                 }
             }
         }
@@ -169,7 +169,7 @@ class TestTimingValidationRefiltering:
                 },
                 "timing_validation": {
                     "enable": True,
-                    "enable_revalidate_with_whisper": True
+                    "enable_revalidate": True
                 }
             }
         }
