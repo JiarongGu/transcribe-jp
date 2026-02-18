@@ -58,9 +58,11 @@ def filter_hallucinations(segments, config, model=None, media_path=None):
         if len(segments) != segments_before_validation or timing_config.get("enable_revalidate", False):
             print("    - Re-filtering after timing validation")
 
-            # Re-run phrase filter
+            # Re-run phrase filter WITHOUT revalidation (segments already revalidated by timing_validator)
             if phrase_config.get("enable", False):
-                segments = remove_hallucination_phrases(segments, config, model, media_path)
+                # Pass model=None to disable revalidation in phrase filter during re-filtering
+                # This avoids double-revalidation since segments were already revalidated by timing_validator
+                segments = remove_hallucination_phrases(segments, config, model=None, media_path=None)
 
             # Re-run consecutive duplicates filter
             if consecutive_config.get("enable", False):
